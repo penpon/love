@@ -119,7 +119,6 @@
     </main>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="js/socket.js"></script>
     <script>
         // URLパラメータから情報を取得
         const urlParams = new URLSearchParams(window.location.search);
@@ -161,18 +160,45 @@
             }
         }
         
-        // Socket.io初期化
-        function initializeSocket() {
-            socket = io();
+        // Socket.io初期化（battleパターンに統一）
+        function ensureSocket() {
+            if (socket) return socket;
+            
+            socket = io({
+                transports: ['websocket', 'polling'],
+                timeout: 20000,
+                reconnection: true,
+                reconnectionAttempts: 3,
+                reconnectionDelay: 1000
+            });
             
             socket.on('connect', () => {
-                console.log('モード選択画面でサーバーに接続');
-                // ルーム再参加
+                console.log('モード選択画面でサーバーに接続:', socket.id);
+                
+                if (!roomId || !playerName) {
+                    console.error('roomIdまたはplayerNameが不足しています');
+                    return;
+                }
+                
+                // ルーム参加
                 socket.emit('join_room', {
                     roomId: roomId,
                     playerName: playerName,
                     role: userRole
                 });
+                
+                // 接続状態を更新
+                document.querySelector('.wa-status-dot').className = 'wa-status-dot connected';
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.error('Socket接続エラー:', error);
+                document.querySelector('.wa-status-dot').className = 'wa-status-dot error';
+            });
+            
+            socket.on('disconnect', (reason) => {
+                console.log('Socket切断:', reason);
+                document.querySelector('.wa-status-dot').className = 'wa-status-dot disconnected';
             });
             
             socket.on('room_status', (data) => {
@@ -192,6 +218,12 @@
                 // モード開始の通知を受けた場合
                 proceedToSelectedMode(data.mode, data);
             });
+            
+            return socket;
+        }
+        
+        function initializeSocket() {
+            ensureSocket();
         }
         
         // モード選択
@@ -360,10 +392,19 @@
         }
         
         function goBack() {
-            if (socket) {
-                socket.disconnect();
+            if (socket && socket.connected) {
+                console.log('Socket切断中...');
+                try {
+                    socket.disconnect();
+                } catch (error) {
+                    console.error('Socket切断エラー:', error);
+                }
+                socket = null;
             }
-            window.location.href = `lobby.html?role=${userRole}`;
+            // 切断処理の完了を少し待ってから遷移
+            setTimeout(() => {
+                window.location.href = `lobby.html?role=${userRole}`;
+            }, 100);
         }
         
         // キーボードショートカット
@@ -388,8 +429,13 @@
         
         // ページ離脱時のクリーンアップ
         window.addEventListener('beforeunload', () => {
-            if (socket) {
-                socket.disconnect();
+            if (socket && socket.connected) {
+                try {
+                    socket.disconnect();
+                } catch (error) {
+                    console.error('ページ離脱時のSocket切断エラー:', error);
+                }
+                socket = null;
             }
         });
     </script>
@@ -707,6 +753,16 @@
         .wa-status-dot.connected {
             background: var(--take);
             animation: statusPulse 2s infinite;
+        }
+        
+        .wa-status-dot.error {
+            background: var(--enjhi);
+            animation: none;
+        }
+        
+        .wa-status-dot.disconnected {
+            background: #999;
+            animation: none;
         }
 
         @media (max-width: 768px) {

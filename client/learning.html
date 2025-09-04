@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学習の間 - CS学習クイズバトル</title>
+    <link rel="stylesheet" href="css/taisho.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <!-- 四季の装飾要素 -->
+    <div class="seasonal-decoration" id="seasonalDecoration"></div>
+
+    <main class="washi-container wa-fade-in">
+        <!-- ヘッダー -->
+        <header class="wa-header">
+            <h1 class="wa-title">学習の間</h1>
+            <p class="wa-subtitle">CS雅学の間 - 大正ロマンで学ぶコンピューターサイエンス</p>
+            <div class="wa-divider"></div>
+        </header>
+
+        <!-- 役割表示とステータス -->
+        <div class="wa-role-status" style="margin-bottom: 2rem;">
+            <div class="wa-card">
+                <div class="wa-card-content" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span class="wa-role-badge" id="roleDisplay">未設定</span>
+                        <span class="wa-player-name" id="playerNameDisplay">未設定</span>
+                    </div>
+                    <div>
+                        <span class="wa-room-info">🏛️ <span id="roomIdDisplay">未設定</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ナビゲーション -->
+        <nav class="wa-learning-nav">
+            <div class="wa-nav-item active" data-category="menu">
+                <span class="wa-nav-icon">📚</span>
+                <span class="wa-nav-text">分野選択</span>
+            </div>
+            <div class="wa-nav-item" data-category="numbers">
+                <span class="wa-nav-icon">🔢</span>
+                <span class="wa-nav-text">数値・データ</span>
+            </div>
+            <div class="wa-nav-item" data-category="hardware">
+                <span class="wa-nav-icon">💾</span>
+                <span class="wa-nav-text">ハードウェア</span>
+            </div>
+            <div class="wa-nav-item" data-category="algorithms">
+                <span class="wa-nav-icon">🔄</span>
+                <span class="wa-nav-text">アルゴリズム</span>
+            </div>
+            <div class="wa-nav-item" data-category="web">
+                <span class="wa-nav-icon">🌐</span>
+                <span class="wa-nav-text">Web技術</span>
+            </div>
+            <div class="wa-nav-item" data-category="network">
+                <span class="wa-nav-icon">🔗</span>
+                <span class="wa-nav-text">ネットワーク</span>
+            </div>
+            <div class="wa-nav-item" data-category="security">
+                <span class="wa-nav-icon">🔐</span>
+                <span class="wa-nav-text">セキュリティ</span>
+            </div>
+        </nav>
+
+        <!-- メインコンテンツ -->
+        <section class="wa-learning-main">
+            <!-- 分野選択画面 -->
+            <div class="wa-content-section active" id="menu">
+                <div class="wa-menu-header">
+                    <h2 class="wa-section-title">📖 CS雅学の書庫</h2>
+                    <p class="wa-description">短歌と恋愛物語で紡ぐコンピューターサイエンスの世界</p>
+                </div>
+
+                <div class="wa-category-grid">
+                    <div class="wa-category-card" onclick="selectCategory('numbers')">
+                        <div class="wa-category-icon">🔢</div>
+                        <h3 class="wa-category-title">数値とデータの基礎</h3>
+                        <div class="wa-category-description">
+                            二進法の恋文から始まる<br>
+                            データ表現の美しい世界
+                        </div>
+                        <div class="wa-category-topics">
+                            <span class="wa-topic-tag">二進法</span>
+                            <span class="wa-topic-tag">データ型</span>
+                            <span class="wa-topic-tag">文字コード</span>
+                        </div>
+                    </div>
+
+                    <div class="wa-category-card" onclick="selectCategory('hardware')">
+                        <div class="wa-category-icon">💾</div>
+                        <h3 class="wa-category-title">ハードウェア</h3>
+                        <div class="wa-category-description">
+                            戦場の機械式計算機と<br>
+                            現代コンピュータの物語
+                        </div>
+                        <div class="wa-category-topics">
+                            <span class="wa-topic-tag">CPU</span>
+                            <span class="wa-topic-tag">メモリ</span>
+                            <span class="wa-topic-tag">記憶装置</span>
+                        </div>
+                    </div>
+
+                    <div class="wa-category-card" onclick="selectCategory('algorithms')">
+                        <div class="wa-category-icon">🔄</div>
+                        <h3 class="wa-category-title">データ構造・アルゴリズム</h3>
+                        <div class="wa-category-description">
+                            効率的な愛の伝達方法を<br>
+                            アルゴリズムで表現
+                        </div>
+                        <div class="wa-category-topics">
+                            <span class="wa-topic-tag">配列</span>
+                            <span class="wa-topic-tag">ソート</span>
+                            <span class="wa-topic-tag">探索</span>
+                        </div>
+                    </div>
+
+                    <div class="wa-category-card" onclick="selectCategory('web')">
+                        <div class="wa-category-icon">🌐</div>
+                        <h3 class="wa-category-title">Web基盤技術</h3>
+                        <div class="wa-category-description">
+                            遠距離恋愛を支える<br>
+                            Webの仕組みと技術
+                        </div>
+                        <div class="wa-category-topics">
+                            <span class="wa-topic-tag">HTTP</span>
+                            <span class="wa-topic-tag">HTML/CSS</span>
+                            <span class="wa-topic-tag">JavaScript</span>
+                        </div>
+                    </div>
+
+                    <div class="wa-category-card" onclick="selectCategory('network')">
+                        <div class="wa-category-icon">🔗</div>
+                        <h3 class="wa-category-title">ネットワーク</h3>
+                        <div class="wa-category-description">
+                            戦時通信網から学ぶ<br>
+                            現代ネットワークの基礎
+                        </div>
+                        <div class="wa-category-topics">
+                            <span class="wa-topic-tag">TCP/IP</span>
+                            <span class="wa-topic-tag">DNS</span>
+                            <span class="wa-topic-tag">プロトコル</span>
+                        </div>
+                    </div>
+
+                    <div class="wa-category-card" onclick="selectCategory('security')">
+                        <div class="wa-category-icon">🔐</div>
+                        <h3 class="wa-category-title">セキュリティ</h3>
+                        <div class="wa-category-description">
+                            暗号化された愛の手紙で<br>
+                            学ぶセキュリティの重要性
+                        </div>
+                        <div class="wa-category-topics">
+                            <span class="wa-topic-tag">暗号化</span>
+                            <span class="wa-topic-tag">認証</span>
+                            <span class="wa-topic-tag">脆弱性</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Owner専用同期制御パネル -->
+                <div class="wa-sync-control" id="syncControl" style="display: none; margin-top: 2rem;">
+                    <div class="wa-card">
+                        <div class="wa-card-title">🎭 主催者制御</div>
+                        <div class="wa-card-content">
+                            <p style="margin-bottom: 1rem;">参加者の画面があなたの操作に同期します</p>
+                            <div class="wa-status-item">
+                                <span class="wa-status-dot" id="syncStatus"></span>
+                                <span id="syncStatusText">同期準備中</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 各分野のストーリー表示 -->
+            <div class="wa-content-section" id="numbers">
+                <div class="wa-story-content">
+                    <div class="wa-story-header">
+                        <h2 class="wa-story-title">🔢 数値とデータの基礎</h2>
+                        <div class="wa-story-subtitle">第一章：二進法の恋文</div>
+                        <div class="wa-divider"></div>
+                    </div>
+
+                    <div class="wa-story-layout">
+                        <div class="wa-story-main">
+                            <div class="wa-story-body">
+                                <div class="wa-story-scroll" id="numbersStoryScroll">
+                                    <div class="wa-story-section">
+                                        <div class="wa-typewriter-text" id="numbersStory">
+                                            戦場の片隅で、通信兵の青年・拓海は恋人・桜への手紙を綴っていた。<br><br>
+
+                                            「愛しい桜へ、この戦いが終わったら必ず君のもとへ帰る」<br><br>
+
+                                            しかし敵に解読されぬよう、彼は数学で学んだ二進法で暗号化することにした。<br>
+                                            01001001 00100000 01001100 01101111 01110110 01100101 00100000 01011001 01101111 01110101<br>
+                                            (I Love You)<br><br>
+
+                                            桜もまた、この暗号を解読できる唯一の人。二人の愛は0と1で結ばれていた。<br><br>
+
+                                            コンピュータもまた、すべてを0と1で表現する。この最小単位をビット(bit)と呼び、8ビットで1バイト(byte)となる。<br><br>
+
+                                            拓海の恋文「I Love You」は、<br>
+                                            - I = 01001001 (8ビット = 1バイト)<br>
+                                            - (スペース) = 00100000<br>
+                                            - L = 01001100<br>
+                                            - o = 01101111<br>
+                                            - v = 01110110<br>
+                                            - e = 01100101<br><br>
+
+                                            このように、文字は数値に対応し、その数値が二進法で表現される。<br>
+                                            これが文字コード(ASCII)の仕組みである。<br><br>
+
+                                            <div class="wa-poem-section">
+                                                <div class="wa-poem-title">📜 恋の短歌</div>
+                                                <div class="wa-poem-text">
+                                                    零と一<br>
+                                                    恋文綴る　兵士かな<br>
+                                                    バイトに込めし<br>
+                                                    永遠の愛<br>
+                                                </div>
+                                            </div><br>
+
+                                            戦争が終わり、二人は再会した。桜は拓海に言った。<br>
+                                            「あなたの暗号、全部解読したのよ」<br><br>
+
+                                            そして桜は微笑んで続けた。<br>
+                                            「01001001 00100000 01001100 01101111 01110110 01100101 00100000 01011001 01101111 01110101 00100000 01010100 01101111 01101111」<br>
+                                            (I Love You Too)<br><br>
+
+                                            二人の愛は、デジタル時代の今もなお、0と1の中に息づいている。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="wa-story-sidebar">
+                            <div class="wa-key-concepts">
+                                <h3 class="wa-concepts-title">🔑 重要概念</h3>
+                                <div class="wa-concept-list">
+                                    <div class="wa-concept-item">
+                                        <strong>ビット(bit)</strong>: 0または1の1桁の情報単位
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>バイト(byte)</strong>: 8ビットで構成される情報単位
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>二進法</strong>: 0と1だけで数を表現する方法
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>ASCII</strong>: 文字と数値を対応づける文字コード
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>文字コード</strong>: 文字をコンピュータが理解できる数値に変換する規則
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ハードウェア分野 -->
+            <div class="wa-content-section" id="hardware">
+                <div class="wa-story-content">
+                    <div class="wa-story-header">
+                        <h2 class="wa-story-title">💾 ハードウェア</h2>
+                        <div class="wa-story-subtitle">第二章：機械式計算機の恋</div>
+                        <div class="wa-divider"></div>
+                    </div>
+
+                    <div class="wa-story-layout">
+                        <div class="wa-story-main">
+                            <div class="wa-story-body">
+                                <div class="wa-story-scroll" id="hardwareStoryScroll">
+                                    <div class="wa-story-section">
+                                        <div class="wa-typewriter-text" id="hardwareStory">
+                                            1943年、戦時下の研究所。数学者の美奈子は、巨大な機械式計算機と向き合っていた。<br><br>
+
+                                            この計算機は、弾道計算のために作られたもの。真空管が数千本も並び、部屋全体を占拠していた。<br><br>
+
+                                            美奈子の恋人・正太郎は前線にいる。彼女は毎日、この計算機で正太郎の部隊の生存確率を計算し続けた。<br><br>
+
+                                            機械式計算機の心臓部は演算装置。現代でいうCPU(Central Processing Unit)の原型だった。<br>
+                                            この装置は、「フェッチ→デコード→実行」という基本サイクルで動作していた。<br><br>
+
+                                            <div class="diagram-section">
+                                                <strong>CPUの基本サイクル:</strong><br>
+                                                1. フェッチ(Fetch): 命令をメモリから取得<br>
+                                                2. デコード(Decode): 命令の意味を解読<br>
+                                                3. 実行(Execute): 命令を実際に実行<br>
+                                            </div><br>
+
+                                            計算機には記憶装置も必要だった。当時は磁気ドラムが主流で、現代のハードディスクの祖先だった。<br>
+                                            作業用の高速記憶装置は水銀遅延線メモリ。これが現代のRAM(Random Access Memory)の前身である。<br><br>
+
+                                            ある日、正太郎から手紙が届いた。<br>
+                                            「君の計算のおかげで、僕たちは的確な作戦を立てられている。君は僕たちの頭脳だ」<br><br>
+
+                                            <div class="wa-poem-section">
+                                                <div class="wa-poem-title">📜 機械の短歌</div>
+                                                <div class="wa-poem-text">
+                                                    真空管<br>
+                                                    光りて巡る　想いかな<br>
+                                                    CPUの胸に<br>
+                                                    恋を処理せん<br>
+                                                </div>
+                                            </div><br>
+
+                                            戦争が終わり、美奈子と正太郎は結婚した。<br>
+                                            二人の結婚式の日、美奈子は言った。<br><br>
+
+                                            「私たちの愛も、コンピュータと同じ。<br>
+                                            入力は『出会い』、処理は『思いやり』、出力は『幸せ』よ」<br><br>
+
+                                            そして現代、スマートフォンの中には数十億個のトランジスタが働いている。<br>
+                                            美奈子の機械式計算機から始まった技術革新は、今も私たちの愛を結び続けている。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="wa-story-sidebar">
+                            <div class="wa-key-concepts">
+                                <h3 class="wa-concepts-title">🔑 重要概念</h3>
+                                <div class="wa-concept-list">
+                                    <div class="wa-concept-item">
+                                        <strong>CPU</strong>: コンピュータの中央処理装置、計算と制御を行う
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>フェッチ・デコード・実行サイクル</strong>: CPUの基本的な動作パターン
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>RAM</strong>: ランダムアクセスメモリ、一時的なデータ保存
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>ハードディスク</strong>: 永続的なデータ保存装置
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>トランジスタ</strong>: デジタル信号の制御を行う基本素子
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2進数・16進数の概念 -->
+            <div class="wa-content-section" id="binary">
+                <div class="wa-story-content">
+                    <div class="wa-story-header">
+                        <h2 class="wa-story-title">💻 2進数・16進数の概念</h2>
+                        <div class="wa-story-subtitle">第三章：暗号解読師の恋</div>
+                        <div class="wa-divider"></div>
+                    </div>
+
+                    <div class="wa-story-layout">
+                        <div class="wa-story-main">
+                            <div class="wa-story-body">
+                                <div class="wa-story-scroll" id="binaryStoryScroll">
+                                    <div class="wa-story-section">
+                                        <div class="wa-typewriter-text" id="binaryStory">
+                                            1944年、英国の暗号解読所。若き数学者・章太郎は、ドイツ軍の暗号と格闘していた。<br><br>
+
+                                            その日、彼の元に届いた暗号は、これまでとは違っていた。<br>
+                                            "101101110011 110000111001 100101110000"<br><br>
+
+                                            これは2進数で書かれている。章太郎はすぐに気づいた。<br>
+                                            これは敵の暗号ではなく、恋人・花子からのメッセージだった。<br><br>
+
+                                            2進数から10進数に変換してみる。<br>
+                                            - 101101110011 = 2931<br>
+                                            - 110000111001 = 3129<br>
+                                            - 100101110000 = 2416<br><br>
+
+                                            しかし、数字だけでは意味が分からない。章太郎は16進数でも試してみた。<br>
+                                            - 2931 → B73 (16進数)<br>
+                                            - 3129 → C39<br>
+                                            - 2416 → 970<br><br>
+
+                                            その時、章太郎はASCIIコード表を見ていた。<br>
+                                            - B = 66 + 7 = 73 → 'I'<br>
+                                            - C = 67 + 3 = 32 + 9 = ' L'<br>
+                                            - 970 → 'ove'<br><br>
+
+                                            "I Love" - 花子からの愛の告白だった。<br><br>
+
+                                            <div class="wa-poem-section">
+                                                <div class="wa-poem-title">📜 進数の短歌</div>
+                                                <div class="wa-poem-text">
+                                                    二進法<br>
+                                                    十六進法　心を読み<br>
+                                                    暗号解き<br>
+                                                    愛を知りけり<br>
+                                                </div>
+                                            </div><br>
+
+                                            戦後、二人は結婚した。章太郎はコンピュータの開発者となり、<br>
+                                            花子はプログラマーとなった。二人の恋が、デジタル技術の未来を切り開いた。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="wa-story-sidebar">
+                            <div class="wa-key-concepts">
+                                <h3 class="wa-concepts-title">🔑 重要概念</h3>
+                                <div class="wa-concept-list">
+                                    <div class="wa-concept-item">
+                                        <strong>2進数</strong>: 0と1だけで数を表現する方法、コンピュータの基本
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>16進数</strong>: 0-9とA-Fで数を表現、プログラミングで使用
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>進数変換</strong>: 異なる進数間の数値変換技術
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>桁上がり</strong>: 下位から上位への数値繰り上がり
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 文字コード（UTF-8） -->
+            <div class="wa-content-section" id="encoding">
+                <div class="wa-story-content">
+                    <div class="wa-story-header">
+                        <h2 class="wa-story-title">🌏 文字コード（UTF-8）</h2>
+                        <div class="wa-story-subtitle">第四章：国際恋文の文字化け</div>
+                        <div class="wa-divider"></div>
+                    </div>
+
+                    <div class="wa-story-layout">
+                        <div class="wa-story-main">
+                            <div class="wa-story-body">
+                                <div class="wa-story-scroll" id="encodingStoryScroll">
+                                    <div class="wa-story-section">
+                                        <div class="wa-typewriter-text" id="encodingStory">
+                                            1950年、大学で学ぶ日本人留学生・美幸。彼女はアメリカ人の恋人・ジョンと手紙で遠距離恋愛をしていた。<br><br>
+
+                                            ある日、ジョンから届いた手紙が奇妙だった。<br>
+                                            "I ��� you, my ���"<br><br>
+
+                                            美幸の日本語の部分が、すべて文字化けしていた。<br>
+                                            これは文字コードの問題だった。<br><br>
+
+                                            当時のASCIIコードは、英数字しか扱えない。<br>
+                                            - ASCII: 7ビット（128文字）<br>
+                                            - 日本語: ひらがな・カタカナ・漢字で数千文字<br><br>
+
+                                            美幸は研究した。日本では各社が独自の文字コードを開発。<br>
+                                            - Shift_JIS: マイクロソフトが開発<br>
+                                            - EUC-JP: Unix系で使用<br>
+                                            - ISO-2022-JP: メールで使用<br><br>
+
+                                            しかし、これらは互いに互換性がない。<br>
+                                            異なるシステム間でテキストを交換すると文字化けが発生する。<br><br>
+
+                                            そこで颯爽としたのがUTF-8。<br>
+                                            - 世界中のあらゆる文字を一つのコードで表現<br>
+                                            - 可変長エンコーディング<br>
+                                            - ASCIIとの下位互換性<br><br>
+
+                                            <div class="wa-poem-section">
+                                                <div class="wa-poem-title">📜 文字の短歌</div>
+                                                <div class="wa-poem-text">
+                                                    世界を結ぶ<br>
+                                                    UTF-8　恋文を<br>
+                                                    文字化けせず<br>
+                                                    想いを伝えん<br>
+                                                </div>
+                                            </div><br>
+
+                                            現代のWebやメールではUTF-8が標準となった。<br>
+                                            美幸とジョンの恋文も、今では日本語も英語も美しく表示される。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="wa-story-sidebar">
+                            <div class="wa-key-concepts">
+                                <h3 class="wa-concepts-title">🔑 重要概念</h3>
+                                <div class="wa-concept-list">
+                                    <div class="wa-concept-item">
+                                        <strong>文字コード</strong>: 文字をコンピュータで扱うための数値対応表
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>UTF-8</strong>: 世界中の文字を一つのコードで表現する方式
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>文字化け</strong>: 文字コードの違いによって正しく表示されない現象
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>エンコーディング</strong>: 文字をバイト列に変換する方式
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- データサイズの概念 -->
+            <div class="wa-content-section" id="datasize">
+                <div class="wa-story-content">
+                    <div class="wa-story-header">
+                        <h2 class="wa-story-title">📊 データサイズの概念</h2>
+                        <div class="wa-story-subtitle">第五章：写真データで綴る思い出の重さ</div>
+                        <div class="wa-divider"></div>
+                    </div>
+
+                    <div class="wa-story-layout">
+                        <div class="wa-story-main">
+                            <div class="wa-story-body">
+                                <div class="wa-story-scroll" id="datasizeStoryScroll">
+                                    <div class="wa-story-section">
+                                        <div class="wa-typewriter-text" id="datasizeStory">
+                                            1990年、コンピュータが家庭に普及し始めた時代。大学生の由美は、交換日記で出会ったアメリカ人のマイクと遠距離恋愛中。<br><br>
+
+                                            彼女のコンピュータのハードディスクは10MB（メガバイト）しかない。<br>
+                                            マイクとの写真を一枚保存するだけで、貴重な容量を消費してしまう。<br><br>
+
+                                            情報の単位を理解しよう。<br>
+                                            - 1ビット = 0または1の情報<br>
+                                            - 1バイト = 8ビット<br>
+                                            - 1KB = 1,024バイト<br>
+                                            - 1MB = 1,024KB = 1,048,576バイト<br>
+                                            - 1GB = 1,024MB<br><br>
+
+                                            当時のデジタルカメラでは、一枚の写真が約1MB。<br>
+                                            ハードディスクに10枚しか保存できない。<br><br>
+
+                                            由美は考えた。フロッピーディスクは1.44MB。<br>
+                                            マイクとの写真を送るには、メールで送信するしかない。<br><br>
+
+                                            しかし、当時のメールシステムは数百キロバイトまでしか送信できない。<br>
+                                            1MBの写真は送れないのだ。<br><br>
+
+                                            <div class="wa-poem-section">
+                                                <div class="wa-poem-title">📜 データの短歌</div>
+                                                <div class="wa-poem-text">
+                                                    メガバイト<br>
+                                                    ひとつひとつの　思い出<br>
+                                                    送りたきけれど<br>
+                                                    容量足らず<br>
+                                                </div>
+                                            </div><br>
+
+                                            今ではギガバイト、テラバイトの時代。<br>
+                                            由美とマイクは結婚し、クラウドストレージで何万枚もの思い出を保存している。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="wa-story-sidebar">
+                            <div class="wa-key-concepts">
+                                <h3 class="wa-concepts-title">🔑 重要概念</h3>
+                                <div class="wa-concept-list">
+                                    <div class="wa-concept-item">
+                                        <strong>バイト</strong>: コンピュータの基本データ単位（8ビット）
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>KB（キロバイト）</strong>: 1,024バイト、テキストファイルのサイズ
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>MB（メガバイト）</strong>: 1,024KB、画像ファイルのサイズ
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>GB（ギガバイト）</strong>: 1,024MB、ハードディスクの容量
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 浮動小数点数 -->
+            <div class="wa-content-section" id="floating">
+                <div class="wa-story-content">
+                    <div class="wa-story-header">
+                        <h2 class="wa-story-title">🗺️ 浮動小数点数</h2>
+                        <div class="wa-story-subtitle">第六章：測量技師の精密な愛の計算</div>
+                        <div class="wa-divider"></div>
+                    </div>
+
+                    <div class="wa-story-layout">
+                        <div class="wa-story-main">
+                            <div class="wa-story-body">
+                                <div class="wa-story-scroll" id="floatingStoryScroll">
+                                    <div class="wa-story-section">
+                                        <div class="wa-typewriter-text" id="floatingStory">
+                                            1955年、地理測量所の技師・一郎は、恋人・章子との結婚式のために教会までの正確な距離を計算していた。<br><br>
+
+                                            GPSがない時代、測量は手作業。三角法で計算すると...<br>
+                                            教会までの直線距離: 3.14159265358979...キロメートル<br><br>
+
+                                            この無限小数をコンピュータでどう表現する？<br>
+                                            整数とは違い、小数には「浮動小数点」という方式が必要だ。<br><br>
+
+                                            浮動小数点の仕組み：<br>
+                                            - 符号ビット: 正負の符号<br>
+                                            - 指数部: 小数点の位置<br>
+                                            - 仮数部: 実際の数値データ<br><br>
+
+                                            例: 3.14159 → 1.14159 × 2¹ (2進数で)<br><br>
+
+                                            しかし、浮動小数点には落とし穴がある。<br>
+                                            0.1 + 0.2 = 0.30000000000000004<br>
+                                            これは2進数では0.1を正確に表現できないからだ。<br><br>
+
+                                            一郎は精密な計算のため、固定小数点や有理数演算を使うことにした。<br><br>
+
+                                            <div class="wa-poem-section">
+                                                <div class="wa-poem-title">📜 数値の短歌</div>
+                                                <div class="wa-poem-text">
+                                                    無限を<br>
+                                                    有限で表し　数々かな<br>
+                                                    浮動小数<br>
+                                                    愛も計算<br>
+                                                </div>
+                                            </div><br>
+
+                                            結婚式の日、一郎は章子に言った。<br>
+                                            「君への愛は浮動小数点じゃ表現できない。無限大だから」
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="wa-story-sidebar">
+                            <div class="wa-key-concepts">
+                                <h3 class="wa-concepts-title">🔑 重要概念</h3>
+                                <div class="wa-concept-list">
+                                    <div class="wa-concept-item">
+                                        <strong>浮動小数点</strong>: コンピュータで小数を表現する方式
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>IEEE 754</strong>: 浮動小数点数の國際標準
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>丸め誤差</strong>: 有限のビットで無限小数を表現することで発生する誤差
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>仮数部・指数部</strong>: 浮動小数点数の構成要素
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- データ圧縮 -->
+            <div class="wa-content-section" id="compression">
+                <div class="wa-story-content">
+                    <div class="wa-story-header">
+                        <h2 class="wa-story-title">📦 データ圧縮</h2>
+                        <div class="wa-story-subtitle">第七章：限られた通信で伝える想い</div>
+                        <div class="wa-divider"></div>
+                    </div>
+
+                    <div class="wa-story-layout">
+                        <div class="wa-story-main">
+                            <div class="wa-story-body">
+                                <div class="wa-story-scroll" id="compressionStoryScroll">
+                                    <div class="wa-story-section">
+                                        <div class="wa-typewriter-text" id="compressionStory">
+                                            1969年、アポロ11号の時代。無線通信技師の八郎は、地球から月の基地で働く恋人・かおりへメッセージを送っていた。<br><br>
+
+                                            しかし、地球から月までの通信は極めて限られている。<br>
+                                            1日に送れるデータ量はわずか10KB。<br><br>
+
+                                            八郎のメッセージは長い。<br>
+                                            「かおりへ。今日も君を思っています。この遠い宇宙の中で、君への愛だけが私の心を支えています。」<br><br>
+
+                                            このテキストをそのまま送ると1200バイト。しかし、圧縮すれば...<br><br>
+
+                                            データ圧縮の原理：<br>
+                                            1. 繰り返しの検出: 「君へ」が3回出現<br>
+                                            2. 辞書化: 「君へ」→ 「#1」で置き換え<br>
+                                            3. LZ77アルゴリズム: 過去に出現した文字列を参照<br><br>
+
+                                            結果、800バイトまで圧縮できた。<br>
+                                            縮率: 33%、400バイトの節約。<br><br>
+
+                                            しかし、圧縮にはリスクもある。<br>
+                                            非可逆圧縮だと、情報が永久に失われる。<br>
+                                            JPEG写真のように、圧縮するたびに画質が劣化する。<br><br>
+
+                                            <div class="wa-poem-section">
+                                                <div class="wa-poem-title">📜 圧縮の短歌</div>
+                                                <div class="wa-poem-text">
+                                                    想いをこめ<br>
+                                                    数少な文字で　伝えたき<br>
+                                                    圧縮アルゴ<br>
+                                                    愛を節約せん<br>
+                                                </div>
+                                            </div><br>
+
+                                            アポロ計画が成功し、かおりは地球に帰還した。<br>
+                                            八郎は言った。「圧縮した情報の中に、僕の全ての愛が詰まっていたんだ」
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="wa-story-sidebar">
+                            <div class="wa-key-concepts">
+                                <h3 class="wa-concepts-title">🔑 重要概念</h3>
+                                <div class="wa-concept-list">
+                                    <div class="wa-concept-item">
+                                        <strong>データ圧縮</strong>: データサイズを小さくする技術
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>可逆圧縮</strong>: 情報を失わずに圧縮する方式（ZIPなど）
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>非可逆圧縮</strong>: 情報を捨てて圧縮する方式（JPEGなど）
+                                    </div>
+                                    <div class="wa-concept-item">
+                                        <strong>LZ系アルゴリズム</strong>: 繰り返しパターンを利用した圧縮手法
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- その他の分野 -->
+            <div class="wa-content-section" id="algorithms">
+                <div class="wa-coming-soon">
+                    <div class="wa-coming-soon-icon">🚧</div>
+                    <div class="wa-coming-soon-text">アルゴリズム分野の物語は準備中です</div>
+                    <div class="wa-coming-soon-subtitle">効率的な愛の伝達方法をお楽しみに...</div>
+                </div>
+            </div>
+
+            <div class="wa-content-section" id="web">
+                <div class="wa-coming-soon">
+                    <div class="wa-coming-soon-icon">🚧</div>
+                    <div class="wa-coming-soon-text">Web技術分野の物語は準備中です</div>
+                    <div class="wa-coming-soon-subtitle">遠距離恋愛を支えるWebの物語をお楽しみに...</div>
+                </div>
+            </div>
+
+            <div class="wa-content-section" id="network">
+                <div class="wa-coming-soon">
+                    <div class="wa-coming-soon-icon">🚧</div>
+                    <div class="wa-coming-soon-text">ネットワーク分野の物語は準備中です</div>
+                    <div class="wa-coming-soon-subtitle">戦時通信網の恋愛物語をお楽しみに...</div>
+                </div>
+            </div>
+
+            <div class="wa-content-section" id="security">
+                <div class="wa-coming-soon">
+                    <div class="wa-coming-soon-icon">🚧</div>
+                    <div class="wa-coming-soon-text">セキュリティ分野の物語は準備中です</div>
+                    <div class="wa-coming-soon-subtitle">暗号化された愛の手紙の物語をお楽しみに...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- アクションボタン -->
+        <div class="wa-btn-group" style="margin-top: 3rem;">
+            <button class="wa-btn wa-btn-primary" onclick="goToQuiz()">
+                <span>⚔️</span>
+                <span>雅なるクイズ対戦へ</span>
+            </button>
+            <button class="wa-btn wa-btn-secondary" onclick="goHome()">
+                <span>🏠</span>
+                <span>学習の間を出る</span>
+            </button>
+        </div>
+    </main>
+
+
+    <script>
+        // URL パラメータから情報を取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('roomId');
+        const playerName = urlParams.get('playerName');
+        const userRole = urlParams.get('role') || 'guest';
+        
+        // Socket.io 接続
+        const socket = io();
+        let currentCategory = 'menu';
+        
+        // 初期化
+        if (roomId) {
+            document.getElementById('roomIdDisplay').textContent = roomId;
+            socket.emit('join_room', {
+                roomId: roomId,
+                playerName: playerName,
+                role: userRole,
+                mode: 'learning'
+            });
+        }
+        
+        if (playerName) {
+            document.getElementById('playerNameDisplay').textContent = playerName;
+        }
+        
+        // 役割表示の更新
+        const roleDisplay = document.getElementById('roleDisplay');
+        const syncControl = document.getElementById('syncControl');
+        
+        if (userRole === 'owner') {
+            roleDisplay.textContent = '👑 主催者';
+            roleDisplay.className = 'wa-role-badge owner';
+            syncControl.style.display = 'block';
+        } else {
+            roleDisplay.textContent = '🎋 参加者';
+            roleDisplay.className = 'wa-role-badge guest';
+        }
+        
+        // Socket.io イベントハンドラー
+        socket.on('room_joined', (data) => {
+            console.log('ルームに参加しました:', data);
+            updateSyncStatus('接続済み', 'success');
+        });
+        
+        socket.on('learning_category_changed', (data) => {
+            if (userRole === 'guest') {
+                // Guestは自動的にOwnerの選択に従う
+                selectCategory(data.category, false); // 同期しないフラグ
+            }
+        });
+        
+        socket.on('learning_scroll_sync', (data) => {
+            if (userRole === 'guest') {
+                // スクロール位置を同期
+                const scrollElement = document.getElementById(`${data.category}StoryScroll`);
+                if (scrollElement) {
+                    scrollElement.scrollTop = data.scrollTop;
+                }
+            }
+        });
+        
+        function selectCategory(category, shouldSync = true) {
+            // Ownerのみ同期イベントを送信
+            if (userRole === 'owner' && shouldSync && roomId) {
+                socket.emit('learning_category_change', {
+                    roomId: roomId,
+                    category: category
+                });
+            }
+            
+            currentCategory = category;
+            
+            // ナビゲーションの更新
+            document.querySelectorAll('.wa-nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-category="${category}"]`).classList.add('active');
+            
+            // コンテンツの切り替え
+            document.querySelectorAll('.wa-content-section').forEach(section => section.classList.remove('active'));
+            document.getElementById(category).classList.add('active');
+            
+            // タイプライター効果
+            if (['numbers', 'hardware', 'binary', 'encoding', 'datasize', 'floating', 'compression'].includes(category)) {
+                const storyElement = document.getElementById(`${category}Story`);
+                if (storyElement && !storyElement.classList.contains('typed')) {
+                    typewriterEffect(storyElement);
+                }
+            }
+        }
+        
+        function typewriterEffect(element) {
+            element.classList.add('typed');
+            const text = element.innerHTML;
+            element.innerHTML = '';
+            element.style.visibility = 'visible';
+            
+            let index = 0;
+            const timer = setInterval(() => {
+                element.innerHTML = text.substring(0, index);
+                index++;
+                
+                if (index > text.length) {
+                    clearInterval(timer);
+                }
+            }, 30); // 30ms間隔で文字を表示（少し遅く）
+        }
+        
+        // スクロール同期
+        function setupScrollSync() {
+            ['numbers', 'hardware', 'binary', 'encoding', 'datasize', 'floating', 'compression'].forEach(category => {
+                const scrollElement = document.getElementById(`${category}StoryScroll`);
+                if (scrollElement && userRole === 'owner') {
+                    scrollElement.addEventListener('scroll', () => {
+                        if (currentCategory === category && roomId) {
+                            socket.emit('learning_scroll_change', {
+                                roomId: roomId,
+                                category: category,
+                                scrollTop: scrollElement.scrollTop
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        
+        // 同期ステータス更新
+        function updateSyncStatus(status, type = 'info') {
+            const statusText = document.getElementById('syncStatusText');
+            const statusDot = document.getElementById('syncStatus');
+            
+            if (statusText) statusText.textContent = status;
+            if (statusDot) {
+                statusDot.className = `wa-status-dot ${type}`;
+            }
+        }
+        
+        function goToQuiz() {
+            if (roomId && playerName) {
+                window.location.href = `matching.html?roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&role=${encodeURIComponent(userRole)}`;
+            } else {
+                alert('クイズに挑戦するには、ルーム情報が必要です。');
+                window.location.href = 'index.html';
+            }
+        }
+        
+        function goHome() {
+            if (roomId) {
+                socket.emit('leave_room', { roomId: roomId });
+            }
+            window.location.href = 'index.html';
+        }
+        
+        // ナビゲーションクリックイベント
+        document.querySelectorAll('.wa-nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const category = item.dataset.category;
+                // Guestの場合は直接選択を無効化
+                if (userRole === 'guest' && category !== 'menu') {
+                    alert('参加者は主催者の操作に同期しています。');
+                    return;
+                }
+                selectCategory(category);
+            });
+        });
+        
+        // 四季装飾の初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            generateSeasonalElements('spring');
+            setInterval(() => changeSeason(), 45000); // 45秒ごとに季節変更
+            setupScrollSync();
+        });
+        
+        // 四季装飾関数（index.htmlから流用）
+        const seasons = ['spring', 'summer', 'autumn', 'winter'];
+        let currentSeasonIndex = 0;
+        
+        function changeSeason() {
+            const seasonElement = document.getElementById('seasonalDecoration');
+            currentSeasonIndex = (currentSeasonIndex + 1) % seasons.length;
+            const season = seasons[currentSeasonIndex];
+            seasonElement.className = `seasonal-decoration season-${season}`;
+            generateSeasonalElements(season);
+        }
+        
+        function generateSeasonalElements(season) {
+            const container = document.getElementById('seasonalDecoration');
+            container.innerHTML = '';
+            
+            const elementCount = 6; // 学習モードでは少し控えめに
+            
+            for (let i = 0; i < elementCount; i++) {
+                const element = document.createElement('div');
+                
+                switch (season) {
+                    case 'spring':
+                        element.className = 'sakura-petal';
+                        element.style.left = Math.random() * 100 + '%';
+                        element.style.animationDelay = Math.random() * 8 + 's';
+                        element.style.animationDuration = (6 + Math.random() * 4) + 's';
+                        break;
+                        
+                    case 'summer':
+                        element.className = 'summer-leaf';
+                        element.style.cssText = `
+                            position: absolute;
+                            width: 8px;
+                            height: 8px;
+                            background: var(--tsuyu);
+                            border-radius: 50% 0 50% 0;
+                            left: ${Math.random() * 100}%;
+                            animation: summerSway ${4 + Math.random() * 3}s ease-in-out infinite;
+                            animation-delay: ${Math.random() * 4}s;
+                            opacity: 0.3;
+                        `;
+                        break;
+                        
+                    case 'autumn':
+                        element.className = 'momiji-leaf';
+                        element.style.left = Math.random() * 100 + '%';
+                        element.style.animationDelay = Math.random() * 10 + 's';
+                        element.style.animationDuration = (8 + Math.random() * 4) + 's';
+                        break;
+                        
+                    case 'winter':
+                        element.className = 'snow-flake';
+                        element.innerHTML = '❄';
+                        element.style.cssText = `
+                            position: absolute;
+                            color: var(--yuki);
+                            font-size: ${6 + Math.random() * 6}px;
+                            left: ${Math.random() * 100}%;
+                            animation: snowFall ${6 + Math.random() * 6}s linear infinite;
+                            animation-delay: ${Math.random() * 6}s;
+                            opacity: 0.6;
+                        `;
+                        break;
+                }
+                
+                container.appendChild(element);
+            }
+        }
+    </script>
+</body>
+</html>

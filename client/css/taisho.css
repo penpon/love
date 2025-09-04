@@ -1,0 +1,1398 @@
+/* ===== 大正ロマン風 CS学習システム ===== */
+/* 和の美しさと近代的な学習を融合したスタイル */
+
+/* === Google Fonts 読み込み === */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;600;700;900&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&display=swap');
+
+/* === リセット & ベース === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* 大正時代の色彩 */
+    --enjhi: #B22D35;        /* 臙脂色 - メインアクセント */
+    --ai: #165E83;           /* 藍色 - 深い青 */
+    --yamabuki: #F8B500;     /* 山吹色 - 温かい黄 */
+    --sakura: #FEEEED;       /* 桜色 - 淡いピンク */
+    --sumi: #1C1C1C;         /* 墨色 - 深い黒 */
+    --washi: #F7F4F0;        /* 和紙色 - オフホワイト */
+    --take: #4A7A4E;         /* 竹色 - より明るい緑 */
+    --momiji: #C73E1D;       /* 紅葉色 - 赤橙 */
+    --tsuyu: #7FB069;        /* 青葉色 - 新緑 */
+    --yuki: #FFFFFF;         /* 雪色 - 純白 */
+    
+    /* 影とグラデーション */
+    --shadow-soft: 0 4px 20px rgba(28, 28, 28, 0.1);
+    --shadow-strong: 0 8px 40px rgba(28, 28, 28, 0.2);
+    --gradient-washi: linear-gradient(135deg, #F7F4F0, #F0EDE7, #F7F4F0);
+    --gradient-sakura: linear-gradient(135deg, #FEEEED, #FDE7E9, #FEEEED);
+    --gradient-momiji: linear-gradient(135deg, #C73E1D, #D4574A, #C73E1D);
+    --gradient-take: linear-gradient(135deg, #4A7A4E, #5A8A5E, #4A7A4E);
+    
+    /* フォント設定 */
+    --font-main: 'Noto Serif JP', serif;
+    --font-ui: 'Noto Sans JP', sans-serif;
+    --font-accent: 'Shippori Mincho', serif;
+    
+    /* サイズ */
+    --border-radius: 12px;
+    --border-radius-large: 20px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-xxl: 48px;
+}
+
+body {
+    font-family: var(--font-main);
+    background: var(--gradient-washi);
+    color: var(--sumi);
+    line-height: 1.8;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* === 和紙テクスチャ背景 === */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: 
+        radial-gradient(circle at 20% 20%, rgba(178, 45, 53, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 60%, rgba(22, 94, 131, 0.02) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(248, 181, 0, 0.02) 0%, transparent 50%);
+    background-size: 800px 600px, 600px 800px, 400px 400px;
+    background-repeat: repeat;
+    z-index: -2;
+    pointer-events: none;
+}
+
+/* === 四季の装飾要素 === */
+.seasonal-decoration {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* 桜の花びら */
+.sakura-petal {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--sakura);
+    border-radius: 50% 0 50% 0;
+    opacity: 0.7;
+    animation: sakuraFall 8s linear infinite;
+    transform-origin: center;
+}
+
+@keyframes sakuraFall {
+    0% {
+        transform: translateY(-100px) rotate(0deg) scale(1);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.7;
+    }
+    90% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(100vh) rotate(360deg) scale(0.8);
+        opacity: 0;
+    }
+}
+
+/* 紅葉 */
+.momiji-leaf {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: var(--momiji);
+    clip-path: polygon(50% 0%, 70% 25%, 100% 40%, 75% 75%, 50% 100%, 25% 75%, 0% 40%, 30% 25%);
+    opacity: 0.6;
+    animation: momijiDance 10s linear infinite;
+}
+
+@keyframes momijiDance {
+    0% {
+        transform: translateY(-100px) rotate(0deg) translateX(0px);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateY(50vh) rotate(180deg) translateX(30px);
+    }
+    90% {
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(100vh) rotate(360deg) translateX(-30px);
+        opacity: 0;
+    }
+}
+
+/* === 和風コンテナ === */
+.washi-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+    background: var(--gradient-washi);
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-strong);
+    border: 1px solid rgba(178, 45, 53, 0.1);
+    position: relative;
+    backdrop-filter: blur(10px);
+}
+
+/* 和風装飾枠 */
+.washi-container::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    background: linear-gradient(
+        45deg,
+        var(--enjhi),
+        var(--ai),
+        var(--yamabuki),
+        var(--take),
+        var(--enjhi)
+    );
+    border-radius: var(--border-radius-large);
+    z-index: -1;
+    opacity: 0.3;
+}
+
+.washi-container::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    border: 2px solid rgba(178, 45, 53, 0.1);
+    border-radius: var(--border-radius);
+    pointer-events: none;
+}
+
+/* === 和風ヘッダー === */
+.wa-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xxl);
+    position: relative;
+}
+
+.wa-title {
+    font-family: var(--font-accent);
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--enjhi);
+    margin-bottom: var(--spacing-md);
+    text-shadow: 2px 2px 0px rgba(178, 45, 53, 0.1);
+    position: relative;
+}
+
+.wa-title::after {
+    content: '🌸';
+    position: absolute;
+    right: -40px;
+    top: -5px;
+    font-size: 1.2rem;
+    animation: titleAccent 3s ease-in-out infinite;
+}
+
+@keyframes titleAccent {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(10deg) scale(1.1); }
+}
+
+.wa-subtitle {
+    font-family: var(--font-ui);
+    color: var(--ai);
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* 和風セクションタイトル */
+.wa-section-title {
+    font-family: var(--font-accent);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--enjhi);
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    text-shadow: 1px 1px 0px rgba(178, 45, 53, 0.1);
+}
+
+.wa-description {
+    font-family: var(--font-main);
+    font-size: 1.3rem;
+    color: var(--sumi);
+    text-align: center;
+    line-height: 1.8;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* 和風装飾線 */
+.wa-divider {
+    width: 200px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--enjhi), var(--yamabuki), var(--enjhi), transparent);
+    margin: var(--spacing-lg) auto;
+    border-radius: 2px;
+}
+
+/* === 和風ナビゲーション === */
+.wa-nav {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+}
+
+.wa-nav-item {
+    background: var(--gradient-sakura);
+    border: 2px solid var(--enjhi);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    font-family: var(--font-ui);
+    font-weight: 500;
+    color: var(--sumi);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.wa-nav-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(178, 45, 53, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.wa-nav-item:hover::before {
+    left: 100%;
+}
+
+.wa-nav-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-strong);
+    background: var(--gradient-momiji);
+    color: var(--yuki);
+    border-color: var(--momiji);
+}
+
+.wa-nav-item.active {
+    background: var(--gradient-take);
+    color: var(--yuki);
+    border-color: var(--take);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+}
+
+/* === 和風モードカード === */
+.wa-mode-selection {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: var(--spacing-xxl);
+    margin: var(--spacing-xxl) 0;
+}
+
+.wa-mode-card {
+    background: var(--gradient-washi);
+    border: 3px solid var(--ai);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-xxl);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    min-height: 320px;
+}
+
+.wa-mode-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(178, 45, 53, 0.1) 0%, transparent 70%);
+    transform: scale(0);
+    transition: transform 0.6s ease;
+}
+
+.wa-mode-card:hover::before {
+    transform: scale(1);
+}
+
+.wa-mode-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--enjhi);
+    box-shadow: 
+        var(--shadow-strong),
+        0 0 30px rgba(178, 45, 53, 0.2);
+}
+
+.wa-mode-card.selected {
+    background: var(--gradient-sakura);
+    border-color: var(--enjhi);
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: var(--shadow-strong);
+}
+
+.wa-mode-icon {
+    font-size: 6rem;
+    margin-bottom: var(--spacing-lg);
+    display: block;
+    animation: modeIconFloat 4s ease-in-out infinite;
+}
+
+@keyframes modeIconFloat {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-5px) rotate(2deg); }
+    75% { transform: translateY(-3px) rotate(-1deg); }
+}
+
+.wa-mode-title {
+    font-family: var(--font-accent);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--enjhi);
+    margin-bottom: var(--spacing-lg);
+    text-shadow: 1px 1px 0px rgba(178, 45, 53, 0.1);
+}
+
+.wa-mode-description {
+    font-family: var(--font-main);
+    color: var(--sumi);
+    font-size: 1.3rem;
+    line-height: 1.7;
+    margin-bottom: var(--spacing-lg);
+}
+
+.wa-mode-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    margin-top: var(--spacing-md);
+}
+
+.wa-feature-tag {
+    background: rgba(22, 94, 131, 0.1);
+    color: var(--ai);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-family: var(--font-ui);
+    border: 1px solid rgba(22, 94, 131, 0.2);
+}
+
+/* === 和風フォーム === */
+.wa-form {
+    background: var(--gradient-sakura);
+    border: 2px solid var(--enjhi);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-xl);
+    margin: var(--spacing-xl) 0;
+    box-shadow: var(--shadow-soft);
+}
+
+.wa-form-title {
+    font-family: var(--font-accent);
+    font-size: 1.8rem;
+    color: var(--enjhi);
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.wa-form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.wa-form-label {
+    display: block;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    color: var(--sumi);
+    margin-bottom: var(--spacing-sm);
+    font-size: 1rem;
+}
+
+.wa-form-input {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 2px solid var(--ai);
+    border-radius: var(--border-radius);
+    background: var(--washi);
+    font-family: var(--font-main);
+    font-size: 1rem;
+    color: var(--sumi);
+    transition: all 0.3s ease;
+}
+
+.wa-form-input:focus {
+    outline: none;
+    border-color: var(--enjhi);
+    box-shadow: 0 0 0 3px rgba(178, 45, 53, 0.1);
+    background: var(--yuki);
+}
+
+.wa-form-hint {
+    font-size: 0.85rem;
+    color: var(--ai);
+    margin-top: var(--spacing-xs);
+    font-family: var(--font-ui);
+}
+
+/* === 和風ボタン === */
+.wa-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border: none;
+    border-radius: var(--border-radius);
+    font-family: var(--font-ui);
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    text-align: center;
+    justify-content: center;
+    min-height: 56px;
+}
+
+.wa-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.wa-btn:hover::before {
+    left: 100%;
+}
+
+.wa-btn-primary {
+    background: var(--gradient-momiji);
+    color: var(--yuki);
+    border: 2px solid var(--momiji);
+}
+
+.wa-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-strong);
+    background: linear-gradient(135deg, #D4574A, #E16B5A);
+}
+
+.wa-btn-secondary {
+    background: var(--gradient-take);
+    color: var(--yuki);
+    border: 2px solid var(--take);
+}
+
+.wa-btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-strong);
+    background: linear-gradient(135deg, #5A8A5E, #6A9A6E);
+}
+
+.wa-btn-outline {
+    background: transparent;
+    color: var(--enjhi);
+    border: 2px solid var(--enjhi);
+}
+
+.wa-btn-outline:hover {
+    background: var(--enjhi);
+    color: var(--yuki);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+}
+
+.wa-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.wa-btn-group {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: var(--spacing-lg);
+}
+
+/* === 和風モーダル === */
+.wa-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(28, 28, 28, 0.7);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: modalFadeIn 0.3s ease;
+}
+
+.wa-modal.active {
+    display: flex;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(8px);
+    }
+}
+
+.wa-modal-content {
+    background: var(--gradient-washi);
+    border: 3px solid var(--enjhi);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-xl);
+    max-width: 500px;
+    width: 90%;
+    box-shadow: var(--shadow-strong);
+    position: relative;
+    animation: modalSlideIn 0.4s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* === 和風ステータスバー === */
+.wa-status {
+    background: var(--gradient-take);
+    color: var(--yuki);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-ui);
+    font-size: 1.1rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.wa-status-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.wa-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--yamabuki);
+    animation: statusPulse 2s infinite;
+}
+
+@keyframes statusPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+/* === 和風カード === */
+.wa-card {
+    background: var(--gradient-washi);
+    border: 2px solid rgba(22, 94, 131, 0.2);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
+}
+
+.wa-card:hover {
+    border-color: var(--enjhi);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-strong);
+}
+
+.wa-card-title {
+    font-family: var(--font-accent);
+    font-size: 1.3rem;
+    color: var(--enjhi);
+    margin-bottom: var(--spacing-sm);
+}
+
+.wa-card-content {
+    font-family: var(--font-main);
+    color: var(--sumi);
+    line-height: 1.7;
+}
+
+/* === 和風リスト === */
+.wa-list {
+    list-style: none;
+    padding: 0;
+}
+
+.wa-list-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid rgba(22, 94, 131, 0.1);
+    transition: all 0.3s ease;
+}
+
+.wa-list-item:hover {
+    background: rgba(178, 45, 53, 0.05);
+    transform: translateX(5px);
+}
+
+.wa-list-item:last-child {
+    border-bottom: none;
+}
+
+.wa-list-icon {
+    margin-right: var(--spacing-md);
+    font-size: 1.2rem;
+    color: var(--enjhi);
+}
+
+.wa-list-text {
+    flex: 1;
+    font-family: var(--font-main);
+    color: var(--sumi);
+}
+
+/* === 和風テーブル === */
+.wa-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--gradient-washi);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+    margin: var(--spacing-lg) 0;
+}
+
+.wa-table th {
+    background: var(--gradient-take);
+    color: var(--yuki);
+    padding: var(--spacing-md);
+    text-align: left;
+    font-family: var(--font-ui);
+    font-weight: 600;
+}
+
+.wa-table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid rgba(22, 94, 131, 0.1);
+    font-family: var(--font-main);
+    color: var(--sumi);
+}
+
+.wa-table tr:hover {
+    background: rgba(178, 45, 53, 0.05);
+}
+
+/* === 和風プログレスバー === */
+.wa-progress {
+    width: 100%;
+    height: 8px;
+    background: rgba(22, 94, 131, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: var(--spacing-md) 0;
+}
+
+.wa-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--enjhi), var(--yamabuki));
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+}
+
+.wa-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* === 和風アラート === */
+.wa-alert {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin: var(--spacing-md) 0;
+    font-family: var(--font-ui);
+    border-left: 4px solid;
+}
+
+.wa-alert-info {
+    background: rgba(22, 94, 131, 0.1);
+    color: var(--ai);
+    border-color: var(--ai);
+}
+
+.wa-alert-success {
+    background: rgba(47, 82, 51, 0.1);
+    color: var(--take);
+    border-color: var(--take);
+}
+
+.wa-alert-warning {
+    background: rgba(248, 181, 0, 0.1);
+    color: #B8860B;
+    border-color: var(--yamabuki);
+}
+
+.wa-alert-error {
+    background: rgba(178, 45, 53, 0.1);
+    color: var(--enjhi);
+    border-color: var(--enjhi);
+}
+
+/* === 和風バッジ === */
+.wa-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--enjhi);
+    color: var(--yuki);
+    font-size: 0.8rem;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* === 縦書きサポート === */
+.wa-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+}
+
+.wa-vertical-text {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    line-height: 2;
+    text-align: start;
+}
+
+/* === アニメーション === */
+.wa-fade-in {
+    animation: waFadeIn 0.6s ease;
+}
+
+@keyframes waFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.wa-slide-in-left {
+    animation: waSlideInLeft 0.6s ease;
+}
+
+@keyframes waSlideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.wa-slide-in-right {
+    animation: waSlideInRight 0.6s ease;
+}
+
+@keyframes waSlideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.wa-pulse {
+    animation: waPulse 2s infinite;
+}
+
+@keyframes waPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}
+
+/* === レスポンシブデザイン === */
+@media (max-width: 768px) {
+    :root {
+        --spacing-xl: 24px;
+        --spacing-xxl: 32px;
+    }
+    
+    .washi-container {
+        margin: var(--spacing-md);
+        padding: var(--spacing-md);
+    }
+    
+    .wa-title {
+        font-size: 2rem;
+    }
+    
+    .wa-mode-selection {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .wa-mode-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .wa-mode-icon {
+        font-size: 3rem;
+    }
+    
+    .wa-btn-group {
+        flex-direction: column;
+    }
+    
+    .wa-btn {
+        width: 100%;
+    }
+    
+    .wa-nav {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .wa-table {
+        font-size: 0.9rem;
+    }
+    
+    .wa-table th,
+    .wa-table td {
+        padding: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    .wa-title {
+        font-size: 1.8rem;
+    }
+    
+    .wa-subtitle {
+        font-size: 1rem;
+    }
+    
+    .wa-modal-content {
+        width: 95%;
+        padding: var(--spacing-lg);
+    }
+    
+    .wa-form {
+        padding: var(--spacing-lg);
+    }
+    
+    .wa-form-input {
+        padding: var(--spacing-sm);
+    }
+}
+
+/* === 印刷用スタイル === */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+    
+    .seasonal-decoration,
+    .wa-btn,
+    .wa-modal {
+        display: none !important;
+    }
+    
+    .washi-container {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    
+    .wa-title {
+        color: black;
+    }
+}
+
+/* === 学習画面専用スタイル === */
+.wa-role-status {
+    margin-bottom: 2rem;
+}
+
+.wa-learning-nav {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+    padding: var(--spacing-md) 0;
+}
+
+.wa-learning-nav .wa-nav-item {
+    background: var(--gradient-sakura);
+    border: 2px solid var(--ai);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md) var(--spacing-lg);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    font-family: var(--font-ui);
+    font-weight: 500;
+    color: var(--sumi);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-width: 120px;
+    text-align: center;
+}
+
+.wa-learning-nav .wa-nav-item.active {
+    background: var(--gradient-momiji);
+    color: var(--yuki);
+    border-color: var(--enjhi);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-strong);
+}
+
+.wa-learning-nav .wa-nav-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-strong);
+    background: var(--gradient-momiji);
+    color: var(--yuki);
+    border-color: var(--momiji);
+}
+
+.wa-nav-icon {
+    font-size: 1.5rem;
+    display: block;
+}
+
+.wa-nav-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.wa-learning-main {
+    min-height: 60vh;
+    position: relative;
+}
+
+.wa-content-section {
+    display: none;
+    animation: waFadeIn 0.5s ease;
+}
+
+.wa-content-section.active {
+    display: block;
+}
+
+.wa-menu-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.wa-category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin: var(--spacing-xl) 0;
+}
+
+.wa-category-card {
+    background: var(--gradient-washi);
+    border: 2px solid var(--ai);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-xl);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+.wa-category-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--enjhi);
+    box-shadow: var(--shadow-strong), 0 0 30px rgba(178, 45, 53, 0.2);
+}
+
+.wa-category-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    display: block;
+}
+
+.wa-category-title {
+    font-family: var(--font-accent);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--enjhi);
+    margin-bottom: var(--spacing-md);
+}
+
+.wa-category-description {
+    font-family: var(--font-main);
+    color: var(--sumi);
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: var(--spacing-lg);
+}
+
+.wa-category-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    justify-content: center;
+}
+
+.wa-topic-tag {
+    background: rgba(22, 94, 131, 0.1);
+    color: var(--ai);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    font-family: var(--font-ui);
+    border: 1px solid rgba(22, 94, 131, 0.2);
+}
+
+.wa-story-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.wa-story-layout {
+    display: flex;
+    gap: var(--spacing-xl);
+    align-items: flex-start;
+}
+
+.wa-story-main {
+    flex: 2;
+    min-width: 0;
+}
+
+.wa-story-sidebar {
+    flex: 1;
+    position: sticky;
+    top: var(--spacing-lg);
+    max-height: calc(100vh - var(--spacing-xxl));
+    overflow-y: auto;
+}
+
+.wa-story-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.wa-story-title {
+    font-family: var(--font-accent);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--enjhi);
+    margin-bottom: var(--spacing-md);
+}
+
+.wa-story-subtitle {
+    font-family: var(--font-main);
+    color: var(--ai);
+    font-size: 1.3rem;
+    font-weight: 400;
+    margin-bottom: var(--spacing-lg);
+}
+
+.wa-story-body {
+    background: var(--gradient-sakura);
+    border: 2px solid var(--enjhi);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-soft);
+}
+
+.wa-story-scroll {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: var(--spacing-sm);
+}
+
+.wa-typewriter-text {
+    font-family: var(--font-main);
+    font-size: 1.2rem;
+    line-height: 2;
+    color: var(--sumi);
+    visibility: hidden;
+}
+
+.wa-typewriter-text.typed {
+    visibility: visible;
+}
+
+.wa-story-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.wa-poem-section {
+    background: var(--gradient-washi);
+    border-left: 4px solid var(--enjhi);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-xl) 0;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.wa-poem-title {
+    font-family: var(--font-accent);
+    font-size: 1.3rem;
+    color: var(--enjhi);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.wa-poem-text {
+    font-family: var(--font-main);
+    font-size: 1.1rem;
+    text-align: center;
+    line-height: 1.8;
+    color: var(--sumi);
+    writing-mode: horizontal-tb;
+}
+
+.wa-key-concepts {
+    background: var(--gradient-washi);
+    border: 2px solid var(--ai);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
+}
+
+.wa-concepts-title {
+    font-family: var(--font-accent);
+    font-size: 1.5rem;
+    color: var(--enjhi);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+}
+
+.wa-concept-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+}
+
+.wa-concept-item {
+    background: var(--washi);
+    border: 1px solid rgba(22, 94, 131, 0.2);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    font-family: var(--font-main);
+    color: var(--sumi);
+    line-height: 1.6;
+}
+
+.wa-concept-item strong {
+    color: var(--enjhi);
+    font-weight: 600;
+}
+
+.wa-coming-soon {
+    text-align: center;
+    padding: var(--spacing-xxl);
+    color: var(--ai);
+}
+
+.wa-coming-soon-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.wa-coming-soon-text {
+    font-family: var(--font-accent);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+}
+
+.wa-coming-soon-subtitle {
+    font-family: var(--font-main);
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.wa-sync-control {
+    margin-top: 2rem;
+}
+
+.wa-status-dot.success {
+    background: var(--take);
+    animation: none;
+}
+
+.wa-status-dot.info {
+    background: var(--ai);
+}
+
+/* === 高コントラスト対応 === */
+@media (prefers-contrast: high) {
+    :root {
+        --enjhi: #8B0000;
+        --ai: #000080;
+        --sumi: #000000;
+        --washi: #FFFFFF;
+    }
+    
+    .wa-mode-card,
+    .wa-card {
+        border-width: 3px;
+    }
+    
+    .wa-btn {
+        border-width: 3px;
+    }
+}
+
+/* === 動作軽減対応 === */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .sakura-petal,
+    .momiji-leaf {
+        display: none;
+    }
+}
+
+/* === フォーカス可視性 === */
+.wa-btn:focus,
+.wa-nav-item:focus,
+.wa-form-input:focus {
+    outline: 3px solid var(--yamabuki);
+    outline-offset: 2px;
+}
+
+/* === 選択テキストスタイル === */
+::selection {
+    background: rgba(178, 45, 53, 0.2);
+    color: var(--sumi);
+}
+
+::-moz-selection {
+    background: rgba(178, 45, 53, 0.2);
+    color: var(--sumi);
+}
+
+/* === スクロールバースタイル === */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--washi);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--enjhi), var(--momiji));
+    border-radius: 6px;
+    border: 2px solid var(--washi);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--momiji), var(--enjhi));
+}

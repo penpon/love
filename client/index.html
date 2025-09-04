@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS学習クイズバトル - 大正ロマンで学ぶコンピューターサイエンス</title>
+    <link rel="stylesheet" href="css/taisho.css">
+</head>
+<body>
+    <!-- 四季の装飾要素 -->
+    <div class="seasonal-decoration" id="seasonalDecoration"></div>
+
+    <main class="washi-container wa-fade-in">
+        <!-- ヘッダー -->
+        <header class="wa-header">
+            <h1 class="wa-title">CS学習クイズバトル</h1>
+            <p class="wa-subtitle">大正ロマンで学ぶコンピューターサイエンス</p>
+            <div class="wa-divider"></div>
+            <p class="wa-description">
+                恋愛物語でCSの基礎を学び、<br>
+                華麗なる対戦クイズで知識を深める雅な学習体験
+            </p>
+        </header>
+
+        <!-- 役割選択 -->
+        <section class="wa-role-selection">
+            <h2 class="wa-section-title">🎭 参加方法をお選びください</h2>
+            
+            <div class="wa-mode-selection">
+                <!-- Owner (主催者) -->
+                <div class="wa-mode-card" onclick="selectRoleAndProceed('owner')" data-role="owner">
+                    <div class="wa-mode-icon">👑</div>
+                    <h3 class="wa-mode-title">主催者 (Owner)</h3>
+                    <div class="wa-mode-description">
+                        新しいルームを作成し、<br>
+                        学習の進行を主導します
+                    </div>
+                </div>
+
+                <!-- Guest (参加者) -->
+                <div class="wa-mode-card" onclick="selectRoleAndProceed('guest')" data-role="guest">
+                    <div class="wa-mode-icon">🎋</div>
+                    <h3 class="wa-mode-title">参加者 (Guest)</h3>
+                    <div class="wa-mode-description">
+                        既存のルームに参加し、<br>
+                        主催者と共に学習します
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ステータス表示 -->
+            <div class="wa-status" style="margin-top: 32px;">
+                <div class="wa-status-item">
+                    <div class="wa-status-dot"></div>
+                    <span id="statusText">役割を選択してください</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let selectedRole = '';
+        
+        // 四季のアニメーション設定
+        const seasons = ['spring', 'summer', 'autumn', 'winter'];
+        const seasonNames = ['春', '夏', '秋', '冬'];
+        let currentSeasonIndex = 0;
+        
+        // 季節切り替え（自動のみ）
+        function changeSeason() {
+            const seasonElement = document.getElementById('seasonalDecoration');
+            
+            currentSeasonIndex = (currentSeasonIndex + 1) % seasons.length;
+            const season = seasons[currentSeasonIndex];
+            
+            seasonElement.className = `seasonal-decoration season-${season}`;
+            
+            // 季節に応じた装飾要素を生成
+            generateSeasonalElements(season);
+        }
+        
+        // 季節装飾要素の生成
+        function generateSeasonalElements(season) {
+            const container = document.getElementById('seasonalDecoration');
+            container.innerHTML = ''; // 既存要素をクリア
+            
+            const elementCount = 8;
+            
+            for (let i = 0; i < elementCount; i++) {
+                const element = document.createElement('div');
+                
+                switch (season) {
+                    case 'spring':
+                        element.className = 'sakura-petal';
+                        element.style.left = Math.random() * 100 + '%';
+                        element.style.animationDelay = Math.random() * 8 + 's';
+                        element.style.animationDuration = (6 + Math.random() * 4) + 's';
+                        break;
+                        
+                    case 'summer':
+                        element.className = 'summer-leaf';
+                        element.style.cssText = `
+                            position: absolute;
+                            width: 10px;
+                            height: 10px;
+                            background: var(--tsuyu);
+                            border-radius: 50% 0 50% 0;
+                            left: ${Math.random() * 100}%;
+                            animation: summerSway ${4 + Math.random() * 3}s ease-in-out infinite;
+                            animation-delay: ${Math.random() * 4}s;
+                            opacity: 0.4;
+                        `;
+                        break;
+                        
+                    case 'autumn':
+                        element.className = 'momiji-leaf';
+                        element.style.left = Math.random() * 100 + '%';
+                        element.style.animationDelay = Math.random() * 10 + 's';
+                        element.style.animationDuration = (8 + Math.random() * 4) + 's';
+                        break;
+                        
+                    case 'winter':
+                        element.className = 'snow-flake';
+                        element.innerHTML = '❄';
+                        element.style.cssText = `
+                            position: absolute;
+                            color: var(--yuki);
+                            font-size: ${8 + Math.random() * 8}px;
+                            left: ${Math.random() * 100}%;
+                            animation: snowFall ${6 + Math.random() * 6}s linear infinite;
+                            animation-delay: ${Math.random() * 6}s;
+                            opacity: 0.8;
+                        `;
+                        break;
+                }
+                
+                container.appendChild(element);
+            }
+        }
+        
+        // CSS アニメーション定義を動的に追加
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes summerSway {
+                0%, 100% { transform: translateX(0) rotate(0deg); }
+                25% { transform: translateX(10px) rotate(90deg); }
+                75% { transform: translateX(-10px) rotate(270deg); }
+            }
+            
+            @keyframes snowFall {
+                0% {
+                    transform: translateY(-100px) rotate(0deg);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 0.8;
+                }
+                90% {
+                    opacity: 0.8;
+                }
+                100% {
+                    transform: translateY(100vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 役割選択と直接遷移
+        function selectRoleAndProceed(role) {
+            selectedRole = role;
+            
+            // 選択時のビジュアルフィードバック
+            document.querySelectorAll('.wa-mode-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-role="${role}"]`).classList.add('selected');
+            
+            // ステータス更新
+            const statusText = document.getElementById('statusText');
+            if (role === 'owner') {
+                statusText.textContent = '主催者として選択済み - ロビーへ遵移中...';
+            } else if (role === 'guest') {
+                statusText.textContent = '参加者として選択済み - ロビーへ遵移中...';
+            }
+            statusText.style.color = 'var(--yuki)';
+            
+            // 少し遅延してから遷移（アニメーションのため）
+            setTimeout(() => {
+                proceedToLobby();
+            }, 800);
+        }
+        
+        // 旧関数は互換性のために残しておく
+        function selectRole(role) {
+            selectRoleAndProceed(role);
+        }
+        
+        // ロビーへ進む
+        function proceedToLobby() {
+            if (!selectedRole) {
+                alert('まず役割を選択してください。');
+                return;
+            }
+            
+            // ロビー画面に遷移
+            window.location.href = `lobby.html?role=${selectedRole}`;
+        }
+        
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case '1':
+                    selectRoleAndProceed('owner');
+                    break;
+                case '2':
+                    selectRoleAndProceed('guest');
+                    break;
+            }
+        });
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初期季節装飾
+            generateSeasonalElements('spring');
+            
+            // 定期的な季節変更 (30秒ごと)
+            setInterval(changeSeason, 30000);
+            
+            // アクセシビリティ: 動作軽減設定の場合はアニメーションを停止
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.getElementById('seasonalDecoration').style.display = 'none';
+            }
+        });
+        
+        // ページタイトルアニメーション
+        let titleIndex = 0;
+        const titleVariations = [
+            'CS学習クイズバトル - 大正ロマンで学ぶコンピューターサイエンス',
+            '🌸 CS学習クイズバトル - 雅な学びの世界へ',
+            '⚔️ CS学習クイズバトル - 知識の華麗なる対戦',
+            '🏛️ CS学習クイズバトル - 大正浪漫と技術の融合'
+        ];
+        
+        setInterval(() => {
+            titleIndex = (titleIndex + 1) % titleVariations.length;
+            document.title = titleVariations[titleIndex];
+        }, 5000);
+    </script>
+</body>
+</html>

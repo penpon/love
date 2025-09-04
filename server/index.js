@@ -50,7 +50,21 @@ io.on('connection', (socket) => {
 
     const room = rooms.get(roomId);
     
-    // 既に2人いる場合は拒否
+    // 同じ名前・役割の既存プレイヤーがいるかチェック（重複接続対策）
+    const existingPlayer = room.players.find(p => 
+      p.name === playerName && p.role === role
+    );
+    
+    if (existingPlayer) {
+      console.log(`${playerName} (${role}) は既に接続済みのため、古い接続を置き換えます`);
+      // 古い接続をクリーンアップ
+      room.players = room.players.filter(p => 
+        !(p.name === playerName && p.role === role)
+      );
+      delete room.quizState.scores[existingPlayer.id];
+    }
+    
+    // 既に2人いる場合は拒否（重複チェック後）
     if (room.players.length >= 2) {
       socket.emit('room_full');
       return;
@@ -72,7 +86,7 @@ io.on('connection', (socket) => {
     socket.playerName = playerName;
     socket.role = role || 'guest';
 
-    console.log(`${playerName} (${role}) が部屋 ${roomId} に参加しました`);
+    console.log(`${playerName} (${role}) が部屋 ${roomId} に参加しました (players: ${room.players.length})`);
 
     // ルーム状況を両プレイヤーに通知
     socket.emit('room_joined', {
@@ -212,26 +226,35 @@ io.on('connection', (socket) => {
 
   // 切断処理
   socket.on('disconnect', () => {
-    console.log(`ユーザーが切断しました: ${socket.id}`);
+    console.log(`ユーザーが切断しました: ${socket.id} (${socket.playerName || 'unknown'} - ${socket.role || 'unknown'})`);
     
     if (socket.roomId) {
       const room = rooms.get(socket.roomId);
       if (room) {
+        // 切断されたプレイヤーの情報を保存
+        const disconnectedPlayer = room.players.find(p => p.id === socket.id);
+        
         // プレイヤーを削除
         room.players = room.players.filter(p => p.id !== socket.id);
         delete room.quizState.scores[socket.id];
         
+        console.log(`部屋 ${socket.roomId} から ${socket.playerName} が切断されました (remaining: ${room.players.length})`);
+        
         if (room.players.length === 0) {
           // ルームが空の場合は削除
           rooms.delete(socket.roomId);
+          console.log(`部屋 ${socket.roomId} が削除されました`);
         } else {
           // 残ったプレイヤーに通知
-          io.to(socket.roomId).emit('player_disconnected', {
-            playerName: socket.playerName
-          });
+          if (disconnectedPlayer) {
+            io.to(socket.roomId).emit('player_disconnected', {
+              playerName: disconnectedPlayer.name,
+              role: disconnectedPlayer.role
+            });
+          }
           
           io.to(socket.roomId).emit('room_status', {
-            players: room.players.map(p => ({ name: p.name, ready: p.ready })),
+            players: room.players.map(p => ({ name: p.name, ready: p.ready, role: p.role })),
             canStart: room.players.length === 2
           });
         }

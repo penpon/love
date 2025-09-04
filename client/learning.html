@@ -34,6 +34,26 @@
             </div>
         </div>
 
+        <!-- Guest専用同期状態表示 -->
+        <div class="wa-guest-sync-panel" id="guestSyncPanel" style="display: none; margin-bottom: 2rem;">
+            <div class="wa-card wa-sync-card">
+                <div class="wa-card-content">
+                    <div class="wa-sync-header">
+                        <span class="wa-sync-icon">🌸</span>
+                        <h3 class="wa-sync-title">主催者様と同期中</h3>
+                        <div class="wa-sync-status-dot" id="syncStatusDot"></div>
+                    </div>
+                    <p class="wa-sync-description">
+                        あなたは参加者として、主催者様の操作に優雅に同期いたします。<br>
+                        美しい学習の調べをお楽しみください。
+                    </p>
+                    <div class="wa-sync-info">
+                        <span class="wa-sync-status-text" id="syncStatusText">接続待機中</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ナビゲーション -->
         <nav class="wa-learning-nav">
             <div class="wa-nav-item active" data-category="menu">
@@ -792,6 +812,214 @@
         </div>
     </main>
 
+    <style>
+        /* Guest専用同期パネルのスタイル */
+        .wa-guest-sync-panel {
+            animation: wa-slide-in 0.6s ease-out;
+        }
+        
+        .wa-sync-card {
+            background: linear-gradient(135deg, #f8f4ff 0%, #fff0f8 100%);
+            border: 2px solid var(--take);
+            border-radius: var(--border-radius-large);
+            padding: var(--spacing-lg);
+        }
+        
+        .wa-sync-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            gap: var(--spacing-sm);
+        }
+        
+        .wa-sync-icon {
+            font-size: 1.8rem;
+        }
+        
+        .wa-sync-title {
+            color: var(--enjhi);
+            font-family: var(--font-accent);
+            font-size: 1.4rem;
+            margin: 0;
+            flex-grow: 1;
+        }
+        
+        .wa-sync-status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--take);
+            animation: wa-pulse 2s infinite;
+        }
+        
+        .wa-sync-status-dot.wa-sync-success {
+            background: var(--take);
+        }
+        
+        .wa-sync-status-dot.wa-sync-error {
+            background: var(--enjhi);
+            animation: none;
+        }
+        
+        .wa-sync-description {
+            color: var(--sumi);
+            line-height: 1.6;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .wa-sync-info {
+            padding: var(--spacing-sm) 0;
+            border-top: 1px solid rgba(178, 45, 53, 0.2);
+        }
+        
+        .wa-sync-status-text {
+            color: var(--take);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        /* 無効化されたナビゲーション */
+        .wa-nav-item.wa-nav-disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .wa-nav-item.wa-nav-disabled:hover {
+            transform: none;
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Guest通知のスタイル */
+        .wa-guest-notice {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: var(--gradient-sakura);
+            border: 2px solid var(--enjhi);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-strong);
+            max-width: 350px;
+            animation: wa-notice-slide-in 0.4s ease-out;
+        }
+        
+        .wa-notice-content {
+            display: flex;
+            align-items: flex-start;
+            padding: var(--spacing-lg);
+            gap: var(--spacing-md);
+        }
+        
+        .wa-notice-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .wa-notice-text h4 {
+            color: var(--enjhi);
+            font-family: var(--font-accent);
+            margin: 0 0 var(--spacing-xs) 0;
+            font-size: 1.1rem;
+        }
+        
+        .wa-notice-text p {
+            color: var(--sumi);
+            margin: 0;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+        
+        .wa-notice-close {
+            background: none;
+            border: none;
+            color: var(--enjhi);
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .wa-notice-close:hover {
+            background: rgba(178, 45, 53, 0.1);
+        }
+        
+        /* アニメーション */
+        @keyframes wa-notice-slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .wa-fade-out {
+            animation: wa-notice-slide-out 0.3s ease-in forwards;
+        }
+        
+        @keyframes wa-notice-slide-out {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes wa-slide-in {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes wa-pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.2);
+            }
+        }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .wa-guest-notice {
+                left: 10px;
+                right: 10px;
+                top: 10px;
+                max-width: none;
+            }
+            
+            .wa-sync-card {
+                padding: var(--spacing-md);
+            }
+            
+            .wa-sync-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
 
     <script>
         // URL パラメータから情報を取得
@@ -826,16 +1054,27 @@
         if (userRole === 'owner') {
             roleDisplay.textContent = '👑 主催者';
             roleDisplay.className = 'wa-role-badge owner';
-            syncControl.style.display = 'block';
+            if (syncControl) syncControl.style.display = 'block';
+            
+            // Owner用の制御パネルを表示
+            enableOwnerControls();
         } else {
             roleDisplay.textContent = '🎋 参加者';
             roleDisplay.className = 'wa-role-badge guest';
+            
+            // Guest専用パネルを表示し、操作を無効化
+            showGuestSyncPanel();
+            disableGuestNavigation();
         }
         
         // Socket.io イベントハンドラー
         socket.on('room_joined', (data) => {
             console.log('ルームに参加しました:', data);
-            updateSyncStatus('接続済み', 'success');
+            if (userRole === 'guest') {
+                updateGuestSyncStatus('主催者様と接続済み', 'success');
+            } else {
+                updateSyncStatus('接続済み', 'success');
+            }
         });
         
         socket.on('learning_category_changed', (data) => {
@@ -945,15 +1184,99 @@
             window.location.href = 'index.html';
         }
         
+        // Owner用制御の有効化
+        function enableOwnerControls() {
+            // 全てのナビゲーション要素を有効化
+            document.querySelectorAll('.wa-nav-item').forEach(item => {
+                item.classList.remove('wa-nav-disabled');
+                item.style.pointerEvents = 'auto';
+            });
+        }
+        
+        // Guest同期パネルの表示
+        function showGuestSyncPanel() {
+            const panel = document.getElementById('guestSyncPanel');
+            if (panel) {
+                panel.style.display = 'block';
+                panel.classList.add('wa-fade-in');
+            }
+        }
+        
+        // Guestナビゲーションの無効化
+        function disableGuestNavigation() {
+            document.querySelectorAll('.wa-nav-item').forEach(item => {
+                const category = item.dataset.category;
+                if (category !== 'menu') {
+                    item.classList.add('wa-nav-disabled');
+                    item.title = 'この操作は主催者のみが行えます';
+                }
+            });
+        }
+        
+        // Guest操作時の優雅な通知
+        function showGuestOperationNotice(category) {
+            // 既存の通知があれば削除
+            const existingNotice = document.getElementById('guestNotice');
+            if (existingNotice) {
+                existingNotice.remove();
+            }
+            
+            // 通知要素を作成
+            const notice = document.createElement('div');
+            notice.id = 'guestNotice';
+            notice.className = 'wa-guest-notice wa-fade-in';
+            notice.innerHTML = `
+                <div class="wa-notice-content">
+                    <div class="wa-notice-icon">🌸</div>
+                    <div class="wa-notice-text">
+                        <h4>優雅なる学習同期</h4>
+                        <p>この操作は主催者様が行います。<br>美しい調べに身を委ねてお待ちください。</p>
+                    </div>
+                    <button class="wa-notice-close" onclick="this.closest('.wa-guest-notice').remove();">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notice);
+            
+            // 3秒後に自動削除
+            setTimeout(() => {
+                if (notice.parentNode) {
+                    notice.classList.add('wa-fade-out');
+                    setTimeout(() => notice.remove(), 300);
+                }
+            }, 3000);
+        }
+        
+        // 同期ステータスの更新（Guest専用）
+        function updateGuestSyncStatus(status, type = 'success') {
+            const statusText = document.getElementById('syncStatusText');
+            const statusDot = document.getElementById('syncStatusDot');
+            
+            if (statusText) statusText.textContent = status;
+            if (statusDot) {
+                statusDot.className = `wa-sync-status-dot wa-sync-${type}`;
+            }
+        }
+        
         // ナビゲーションクリックイベント
         document.querySelectorAll('.wa-nav-item').forEach(item => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', (event) => {
                 const category = item.dataset.category;
-                // Guestの場合は直接選択を無効化
-                if (userRole === 'guest' && category !== 'menu') {
-                    alert('参加者は主催者の操作に同期しています。');
+                
+                // Guestの場合は操作を無効化
+                if (userRole === 'guest') {
+                    if (category === 'menu') {
+                        // メニューのみ許可
+                        selectCategory(category);
+                    } else {
+                        // その他の操作は優雅に無効化
+                        event.preventDefault();
+                        showGuestOperationNotice(category);
+                    }
                     return;
                 }
+                
+                // Ownerの場合は正常に操作
                 selectCategory(category);
             });
         });

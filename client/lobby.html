@@ -296,8 +296,19 @@
             showConnectionStatus();
             updateProgress(20, 'サーバーに接続中...');
             
-            // Socket.io接続
-            socket = io();
+            // 既存の接続をクリーンアップ
+            if (socket) {
+                console.log('既存のSocket接続をクリーンアップします');
+                socket.removeAllListeners();
+                socket.disconnect();
+                socket = null;
+            }
+            
+            // 新しいSocket.io接続を作成
+            socket = io({
+                forceNew: true,
+                transports: ['websocket', 'polling']
+            });
             
             socket.on('connect', () => {
                 console.log('サーバーに接続しました');
@@ -410,16 +421,30 @@
             
             const players = data.players || [];
             
-            if (players.length >= 1) {
-                ownerName.textContent = players[0]?.name || '-';
+            // role基準で表示（Owner/Guest順ではなく役割で固定）
+            const ownerPlayer = players.find(p => p.role === 'owner');
+            const guestPlayer = players.find(p => p.role === 'guest');
+            
+            // Owner表示
+            if (ownerPlayer) {
+                ownerName.textContent = ownerPlayer.name;
+            } else {
+                ownerName.textContent = '待機中...';
             }
             
-            if (players.length >= 2) {
-                guestName.textContent = players[1]?.name || '-';
+            // Guest表示
+            if (guestPlayer) {
+                guestName.textContent = guestPlayer.name;
                 guestStatus.textContent = '接続済み';
                 guestStatus.className = 'wa-participant-status ready';
-                
-                // 両方揃ったので続行ボタンを表示
+            } else {
+                guestName.textContent = '待機中...';
+                guestStatus.textContent = '未接続';
+                guestStatus.className = 'wa-participant-status';
+            }
+            
+            // 両方揃ったので続行ボタンを表示
+            if (players.length >= 2) {
                 proceedBtnGroup.style.display = 'block';
             }
         }
@@ -453,6 +478,8 @@
         
         function resetConnection() {
             if (socket) {
+                console.log('Socket接続をリセットします');
+                socket.removeAllListeners();
                 socket.disconnect();
                 socket = null;
             }
@@ -462,11 +489,19 @@
             const connectionStatus = document.getElementById('connectionStatus');
             connectionStatus.style.display = 'none';
             
+            // 参加者表示をリセット
+            const participants = document.getElementById('participants');
+            const proceedBtnGroup = document.getElementById('proceedBtnGroup');
+            participants.style.display = 'none';
+            proceedBtnGroup.style.display = 'none';
+            
             // ステータス更新
             const connectionDot = document.getElementById('connectionDot');
             const connectionText = document.getElementById('connectionText');
+            const statusRoom = document.getElementById('statusRoom');
             connectionDot.style.backgroundColor = 'var(--enjhi)';
             connectionText.textContent = '未接続';
+            statusRoom.textContent = '未設定';
         }
         
         function proceedToModeSelect() {

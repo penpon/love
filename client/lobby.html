@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ルーム情報入力 - CS学習クイズバトル</title>
+    <link rel="stylesheet" href="css/taisho.css">
+</head>
+<body>
+    <!-- 四季の装飾要素 -->
+    <div class="seasonal-decoration" id="seasonalDecoration"></div>
+
+    <main class="washi-container wa-fade-in">
+        <!-- ヘッダー -->
+        <header class="wa-header">
+            <h1 class="wa-title">学習の座敷へようこそ</h1>
+            <p class="wa-subtitle" id="roleSubtitle">主催者としてルームを設営</p>
+            <div class="wa-divider"></div>
+        </header>
+
+        <!-- 役割表示バッジ -->
+        <div class="wa-role-badge" id="roleBadge">
+            <span class="wa-role-icon" id="roleIcon">👑</span>
+            <span class="wa-role-text" id="roleText">主催者 (Owner)</span>
+        </div>
+
+        <!-- ルーム設定フォーム -->
+        <section class="wa-room-setup">
+            <div class="wa-form">
+                <h2 class="wa-form-title">🏛️ ルーム情報</h2>
+
+                <div class="wa-form-group">
+                    <label class="wa-form-label" for="roomId">
+                        <span class="wa-label-icon">🏮</span>
+                        ルーム名
+                    </label>
+                    <input 
+                        type="text" 
+                        id="roomId" 
+                        class="wa-form-input" 
+                        placeholder="例: 大正浪漫学習室" 
+                        maxlength="20"
+                        autocomplete="off"
+                    >
+                    <div class="wa-form-hint">
+                        英数字・ひらがな・カタカナ・漢字が使用できます（4-20文字）
+                    </div>
+                </div>
+
+                <div class="wa-form-group">
+                    <label class="wa-form-label" for="playerName">
+                        <span class="wa-label-icon">🎭</span>
+                        お名前
+                    </label>
+                    <input 
+                        type="text" 
+                        id="playerName" 
+                        class="wa-form-input" 
+                        placeholder="例: 恋する学習者" 
+                        maxlength="15"
+                        autocomplete="name"
+                    >
+                    <div class="wa-form-hint">
+                        学習仲間に表示されるお名前です（2-15文字）
+                    </div>
+                </div>
+
+
+                <!-- 接続ボタン -->
+                <div class="wa-btn-group">
+                    <button class="wa-btn wa-btn-outline" onclick="goBack()">
+                        <span>🔙</span>
+                        <span>戻る</span>
+                    </button>
+                    <button class="wa-btn wa-btn-primary" id="connectBtn" onclick="connectToRoom()">
+                        <span id="connectIcon">🏮</span>
+                        <span id="connectText">学習の間に入室</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 接続状況表示 -->
+        <div class="wa-connection-status" id="connectionStatus" style="display: none;">
+            <div class="wa-card">
+                <div class="wa-card-title">
+                    <span id="statusIcon">🔄</span>
+                    <span id="statusTitle">接続中...</span>
+                </div>
+                <div class="wa-card-content">
+                    <div class="wa-progress">
+                        <div class="wa-progress-bar" id="progressBar" style="width: 0%"></div>
+                    </div>
+                    <p id="statusMessage">サーバーに接続しています...</p>
+                    
+                    <!-- 参加者待ち（Owner専用） -->
+                    <div class="wa-waiting-guest" id="waitingGuest" style="display: none;">
+                        <h4>👥 参加者をお待ちしています</h4>
+                        <p>他の方がこのルームに参加するまでお待ちください</p>
+                        <div class="wa-room-info">
+                            <strong>ルーム名: </strong><span id="displayRoomId"></span>
+                        </div>
+                        <div class="wa-guest-instructions">
+                            <h5>📢 参加方法をお伝えください</h5>
+                            <ol>
+                                <li>トップページで「参加者 (Guest)」を選択</li>
+                                <li>ルーム名に「<strong id="shareRoomId"></strong>」を入力</li>
+                                <li>お名前を入力して入室</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- 参加者表示 -->
+                    <div class="wa-participants" id="participants" style="display: none;">
+                        <h4>👤 参加者</h4>
+                        <div class="wa-participant-list">
+                            <div class="wa-participant-item">
+                                <span class="wa-participant-role">主催者</span>
+                                <span class="wa-participant-name" id="ownerName">-</span>
+                                <span class="wa-participant-status ready">準備完了</span>
+                            </div>
+                            <div class="wa-participant-item">
+                                <span class="wa-participant-role">参加者</span>
+                                <span class="wa-participant-name" id="guestName">待機中...</span>
+                                <span class="wa-participant-status" id="guestStatus">未接続</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 続行ボタン -->
+                    <div class="wa-btn-group" id="proceedBtnGroup" style="display: none; margin-top: 2rem;">
+                        <button class="wa-btn wa-btn-secondary wa-pulse" onclick="proceedToModeSelect()">
+                            <span>✨</span>
+                            <span>モード選択へ進む</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- エラー表示 -->
+        <div class="wa-error-display" id="errorDisplay" style="display: none;">
+            <div class="wa-alert wa-alert-error">
+                <h4>⚠️ 接続エラー</h4>
+                <p id="errorMessage"></p>
+                <button class="wa-btn wa-btn-outline" onclick="retryConnection()">
+                    <span>🔄</span>
+                    <span>再試行</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ヘルプ情報 -->
+        <div class="wa-help-section">
+            <div class="wa-card">
+                <div class="wa-card-title">💡 ご利用方法</div>
+                <div class="wa-card-content">
+                    <div class="wa-help-grid">
+                        <div class="wa-help-item">
+                            <strong>👑 主催者の方</strong>
+                            <p>新しいルーム名とお名前を入力してルームを作成します。参加者の入室をお待ちします。</p>
+                        </div>
+                        <div class="wa-help-item">
+                            <strong>🎋 参加者の方</strong>
+                            <p>主催者が作成したルーム名とお名前を入力してルームに参加します。自動的に主催者と接続されます。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ステータスバー -->
+        <div class="wa-status">
+            <div class="wa-status-item">
+                <span class="wa-status-dot" id="connectionDot"></span>
+                <span id="connectionText">未接続</span>
+            </div>
+            <div class="wa-status-item">
+                <span>🎭 役割: <span id="statusRole">-</span></span>
+            </div>
+            <div class="wa-status-item">
+                <span>🏮 ルーム: <span id="statusRoom">未設定</span></span>
+            </div>
+        </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/socket.js"></script>
+    <script>
+        // URLパラメータから役割を取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const userRole = urlParams.get('role') || 'owner';
+        
+        let socket = null;
+        let isConnecting = false;
+        let roomConnected = false;
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            setupRoleUI();
+            setupFormValidation();
+            generateSeasonalElements('spring');
+            
+            // 自動季節変更（30秒ごと）
+            setInterval(changeSeason, 30000);
+            
+            // フォーカス設定
+            setTimeout(() => {
+                document.getElementById('roomId').focus();
+            }, 500);
+        });
+        
+        // 役割に応じたUI設定
+        function setupRoleUI() {
+            const roleIcon = document.getElementById('roleIcon');
+            const roleText = document.getElementById('roleText');
+            const roleSubtitle = document.getElementById('roleSubtitle');
+            const statusRole = document.getElementById('statusRole');
+            const connectBtn = document.getElementById('connectBtn');
+            const connectText = document.getElementById('connectText');
+            
+            if (userRole === 'owner') {
+                roleIcon.textContent = '👑';
+                roleText.textContent = '主催者 (Owner)';
+                roleSubtitle.textContent = '主催者としてルームを設営';
+                statusRole.textContent = '主催者';
+                connectText.textContent = 'ルームを開設';
+            } else {
+                roleIcon.textContent = '🎋';
+                roleText.textContent = '参加者 (Guest)';
+                roleSubtitle.textContent = '参加者として学習に加わる';
+                statusRole.textContent = '参加者';
+                connectText.textContent = 'ルームに参加';
+                
+                // Guest専用のプレースホルダー
+                document.getElementById('roomId').placeholder = '主催者から教えてもらったルーム名';
+            }
+        }
+        
+        // フォーム検証
+        function setupFormValidation() {
+            const roomIdInput = document.getElementById('roomId');
+            const playerNameInput = document.getElementById('playerName');
+            const connectBtn = document.getElementById('connectBtn');
+            
+            function validateForm() {
+                const roomId = roomIdInput.value.trim();
+                const playerName = playerNameInput.value.trim();
+                
+                const isValid = roomId.length >= 4 && 
+                               roomId.length <= 20 &&
+                               playerName.length >= 2 && 
+                               playerName.length <= 15;
+                
+                connectBtn.disabled = !isValid;
+                
+                // リアルタイムフィードバック
+                updateFieldStatus(roomIdInput, roomId.length >= 4 && roomId.length <= 20);
+                updateFieldStatus(playerNameInput, playerName.length >= 2 && playerName.length <= 15);
+            }
+            
+            roomIdInput.addEventListener('input', validateForm);
+            playerNameInput.addEventListener('input', validateForm);
+            
+            validateForm();
+        }
+        
+        function updateFieldStatus(field, isValid) {
+            if (field.value.length > 0) {
+                if (isValid) {
+                    field.style.borderColor = 'var(--take)';
+                    field.style.backgroundColor = 'rgba(74, 122, 78, 0.1)';
+                } else {
+                    field.style.borderColor = 'var(--enjhi)';
+                    field.style.backgroundColor = 'rgba(178, 45, 53, 0.05)';
+                }
+            } else {
+                field.style.borderColor = 'var(--ai)';
+                field.style.backgroundColor = 'var(--washi)';
+            }
+        }
+        
+        // ルーム接続
+        function connectToRoom() {
+            if (isConnecting || roomConnected) return;
+            
+            const roomId = document.getElementById('roomId').value.trim();
+            const playerName = document.getElementById('playerName').value.trim();
+            
+            if (!roomId || !playerName) {
+                showError('ルーム名とお名前を入力してください');
+                return;
+            }
+            
+            isConnecting = true;
+            showConnectionStatus();
+            updateProgress(20, 'サーバーに接続中...');
+            
+            // Socket.io接続
+            socket = io();
+            
+            socket.on('connect', () => {
+                console.log('サーバーに接続しました');
+                updateProgress(40, 'ルーム情報を送信中...');
+                
+                socket.emit('join_room', {
+                    roomId: roomId,
+                    playerName: playerName,
+                    role: userRole
+                });
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.error('接続エラー:', error);
+                showError('サーバーに接続できませんでした。しばらく待ってから再試行してください。');
+                isConnecting = false;
+            });
+            
+            socket.on('room_full', () => {
+                showError('このルームは満室です。別のルーム名をお試しください。');
+                isConnecting = false;
+            });
+            
+            socket.on('room_status', (data) => {
+                console.log('ルーム状況:', data);
+                updateProgress(80, 'ルーム状況を確認中...');
+                
+                setTimeout(() => {
+                    updateRoomStatus(data);
+                    isConnecting = false;
+                    roomConnected = true;
+                    updateProgress(100, '接続完了！');
+                }, 1000);
+            });
+            
+            socket.on('match_found', (data) => {
+                console.log('マッチング完了:', data);
+                showParticipants(data);
+            });
+            
+            socket.on('player_disconnected', (data) => {
+                showError(`${data.playerName}さんが切断されました。`);
+                resetConnection();
+            });
+            
+            socket.on('disconnect', () => {
+                console.log('サーバーから切断されました');
+                showError('サーバーとの接続が切断されました。');
+                resetConnection();
+            });
+        }
+        
+        function updateProgress(percent, message) {
+            const progressBar = document.getElementById('progressBar');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            progressBar.style.width = percent + '%';
+            statusMessage.textContent = message;
+            
+            if (percent === 100) {
+                setTimeout(() => {
+                    document.getElementById('statusIcon').textContent = '✅';
+                    document.getElementById('statusTitle').textContent = '接続完了';
+                }, 500);
+            }
+        }
+        
+        function updateRoomStatus(data) {
+            const participants = data.players || [];
+            const connectionDot = document.getElementById('connectionDot');
+            const connectionText = document.getElementById('connectionText');
+            const statusRoom = document.getElementById('statusRoom');
+            
+            connectionDot.style.backgroundColor = 'var(--take)';
+            connectionText.textContent = '接続完了';
+            statusRoom.textContent = document.getElementById('roomId').value;
+            
+            if (userRole === 'owner') {
+                if (participants.length < 2) {
+                    showWaitingForGuest();
+                } else {
+                    showParticipants({ players: participants });
+                }
+            } else {
+                showParticipants({ players: participants });
+            }
+        }
+        
+        function showWaitingForGuest() {
+            const waitingGuest = document.getElementById('waitingGuest');
+            const displayRoomId = document.getElementById('displayRoomId');
+            const shareRoomId = document.getElementById('shareRoomId');
+            const roomId = document.getElementById('roomId').value;
+            
+            waitingGuest.style.display = 'block';
+            displayRoomId.textContent = roomId;
+            shareRoomId.textContent = roomId;
+        }
+        
+        function showParticipants(data) {
+            const participants = document.getElementById('participants');
+            const proceedBtnGroup = document.getElementById('proceedBtnGroup');
+            const waitingGuest = document.getElementById('waitingGuest');
+            const ownerName = document.getElementById('ownerName');
+            const guestName = document.getElementById('guestName');
+            const guestStatus = document.getElementById('guestStatus');
+            
+            participants.style.display = 'block';
+            waitingGuest.style.display = 'none';
+            
+            const players = data.players || [];
+            
+            if (players.length >= 1) {
+                ownerName.textContent = players[0]?.name || '-';
+            }
+            
+            if (players.length >= 2) {
+                guestName.textContent = players[1]?.name || '-';
+                guestStatus.textContent = '接続済み';
+                guestStatus.className = 'wa-participant-status ready';
+                
+                // 両方揃ったので続行ボタンを表示
+                proceedBtnGroup.style.display = 'block';
+            }
+        }
+        
+        function showConnectionStatus() {
+            const connectionStatus = document.getElementById('connectionStatus');
+            const errorDisplay = document.getElementById('errorDisplay');
+            
+            connectionStatus.style.display = 'block';
+            errorDisplay.style.display = 'none';
+        }
+        
+        function showError(message) {
+            const errorDisplay = document.getElementById('errorDisplay');
+            const errorMessage = document.getElementById('errorMessage');
+            const connectionStatus = document.getElementById('connectionStatus');
+            
+            errorMessage.textContent = message;
+            errorDisplay.style.display = 'block';
+            connectionStatus.style.display = 'none';
+            
+            // ボタンを再有効化
+            document.getElementById('connectBtn').disabled = false;
+        }
+        
+        function retryConnection() {
+            const errorDisplay = document.getElementById('errorDisplay');
+            errorDisplay.style.display = 'none';
+            resetConnection();
+        }
+        
+        function resetConnection() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+            isConnecting = false;
+            roomConnected = false;
+            
+            const connectionStatus = document.getElementById('connectionStatus');
+            connectionStatus.style.display = 'none';
+            
+            // ステータス更新
+            const connectionDot = document.getElementById('connectionDot');
+            const connectionText = document.getElementById('connectionText');
+            connectionDot.style.backgroundColor = 'var(--enjhi)';
+            connectionText.textContent = '未接続';
+        }
+        
+        function proceedToModeSelect() {
+            const roomId = document.getElementById('roomId').value;
+            const playerName = document.getElementById('playerName').value;
+            
+            // モード選択画面へ遷移
+            window.location.href = `mode-select.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
+        }
+        
+        function goBack() {
+            if (socket) {
+                socket.disconnect();
+            }
+            window.location.href = 'index.html';
+        }
+        
+        // 四季のアニメーション設定
+        const seasons = ['spring', 'summer', 'autumn', 'winter'];
+        let currentSeasonIndex = 0;
+        
+        // 季節切り替え（自動のみ）
+        function changeSeason() {
+            const seasonElement = document.getElementById('seasonalDecoration');
+            
+            currentSeasonIndex = (currentSeasonIndex + 1) % seasons.length;
+            const season = seasons[currentSeasonIndex];
+            
+            seasonElement.className = `seasonal-decoration season-${season}`;
+            
+            // 季節に応じた装飾要素を生成
+            generateSeasonalElements(season);
+        }
+        
+        // 季節装飾の生成
+        function generateSeasonalElements(season = 'spring') {
+            const container = document.getElementById('seasonalDecoration');
+            container.innerHTML = '';
+            
+            const elementCount = 6;
+            
+            for (let i = 0; i < elementCount; i++) {
+                const element = document.createElement('div');
+                
+                switch (season) {
+                    case 'spring':
+                        element.className = 'sakura-petal';
+                        element.style.left = Math.random() * 100 + '%';
+                        element.style.animationDelay = Math.random() * 8 + 's';
+                        element.style.animationDuration = (6 + Math.random() * 4) + 's';
+                        break;
+                        
+                    case 'summer':
+                        element.className = 'summer-leaf';
+                        element.style.cssText = `
+                            position: absolute;
+                            width: 8px;
+                            height: 8px;
+                            background: var(--tsuyu);
+                            border-radius: 50% 0 50% 0;
+                            left: ${Math.random() * 100}%;
+                            animation: summerSway ${4 + Math.random() * 3}s ease-in-out infinite;
+                            animation-delay: ${Math.random() * 4}s;
+                            opacity: 0.3;
+                        `;
+                        break;
+                        
+                    case 'autumn':
+                        element.className = 'momiji-leaf';
+                        element.style.left = Math.random() * 100 + '%';
+                        element.style.animationDelay = Math.random() * 10 + 's';
+                        element.style.animationDuration = (8 + Math.random() * 4) + 's';
+                        break;
+                        
+                    case 'winter':
+                        element.className = 'snow-flake';
+                        element.innerHTML = '❄';
+                        element.style.cssText = `
+                            position: absolute;
+                            color: var(--yuki);
+                            font-size: ${6 + Math.random() * 6}px;
+                            left: ${Math.random() * 100}%;
+                            animation: snowFall ${6 + Math.random() * 6}s linear infinite;
+                            animation-delay: ${Math.random() * 6}s;
+                            opacity: 0.6;
+                        `;
+                        break;
+                }
+                
+                container.appendChild(element);
+            }
+        }
+        
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !isConnecting) {
+                const connectBtn = document.getElementById('connectBtn');
+                if (!connectBtn.disabled) {
+                    connectToRoom();
+                }
+            }
+            
+            if (e.key === 'Escape') {
+                goBack();
+            }
+        });
+        
+        // ページ離脱時のクリーンアップ
+        window.addEventListener('beforeunload', () => {
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+    </script>
+
+    <style>
+        /* 夏と冬のアニメーション */
+        @keyframes summerSway {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(10px) rotate(90deg); }
+            75% { transform: translateX(-10px) rotate(270deg); }
+        }
+        
+        @keyframes snowFall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .wa-section-title {
+            font-family: var(--font-accent);
+            font-size: 1.5rem;
+            color: var(--enjhi);
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .wa-role-badge {
+            background: var(--gradient-sakura);
+            border: 2px solid var(--enjhi);
+            border-radius: var(--border-radius-large);
+            padding: var(--spacing-md) var(--spacing-lg);
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-md);
+        }
+
+        .wa-role-icon {
+            font-size: 2rem;
+        }
+
+        .wa-role-text {
+            font-family: var(--font-accent);
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--enjhi);
+        }
+
+        .wa-label-icon {
+            margin-right: var(--spacing-sm);
+        }
+
+        .wa-radio-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-sm);
+        }
+
+        .wa-radio-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            border: 2px solid var(--ai);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--washi);
+        }
+
+        .wa-radio-item:hover {
+            border-color: var(--enjhi);
+            background: var(--gradient-sakura);
+        }
+
+        .wa-radio-item input {
+            display: none;
+        }
+
+        .wa-radio-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--ai);
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .wa-radio-item input:checked + .wa-radio-custom {
+            border-color: var(--enjhi);
+            background: var(--enjhi);
+        }
+
+        .wa-radio-item input:checked + .wa-radio-custom::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--yuki);
+            border-radius: 50%;
+            top: 4px;
+            left: 4px;
+        }
+
+        .wa-radio-text {
+            font-family: var(--font-main);
+            color: var(--sumi);
+        }
+
+        .wa-connection-status {
+            margin-top: var(--spacing-xl);
+        }
+
+        .wa-waiting-guest {
+            background: var(--gradient-sakura);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius);
+            margin-top: var(--spacing-md);
+        }
+
+        .wa-room-info {
+            background: rgba(178, 45, 53, 0.1);
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius);
+            margin: var(--spacing-md) 0;
+            text-align: center;
+        }
+
+        .wa-guest-instructions {
+            margin-top: var(--spacing-lg);
+        }
+
+        .wa-guest-instructions h5 {
+            color: var(--enjhi);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .wa-guest-instructions ol {
+            padding-left: var(--spacing-lg);
+        }
+
+        .wa-guest-instructions li {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .wa-participants {
+            margin-top: var(--spacing-lg);
+        }
+
+        .wa-participant-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        .wa-participant-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--washi);
+            border: 1px solid rgba(22, 94, 131, 0.2);
+            border-radius: var(--border-radius);
+        }
+
+        .wa-participant-role {
+            font-weight: 600;
+            color: var(--ai);
+            min-width: 60px;
+        }
+
+        .wa-participant-name {
+            flex: 1;
+            font-weight: 500;
+            color: var(--sumi);
+        }
+
+        .wa-participant-status {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(178, 45, 53, 0.1);
+            color: var(--enjhi);
+        }
+
+        .wa-participant-status.ready {
+            background: var(--take);
+            color: var(--yuki);
+        }
+
+        .wa-error-display {
+            margin-top: var(--spacing-xl);
+        }
+
+        .wa-help-section {
+            margin-top: var(--spacing-xl);
+        }
+
+        .wa-help-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .wa-help-item strong {
+            color: var(--enjhi);
+            display: block;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        @media (max-width: 768px) {
+            .wa-radio-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .wa-help-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

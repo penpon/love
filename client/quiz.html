@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クイズバトル - CS学習クイズバトル</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="terminal-body quiz-battle">
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-controls">
+                <span class="control red"></span>
+                <span class="control yellow"></span>
+                <span class="control green"></span>
+            </div>
+            <div class="terminal-title">QUIZ-BATTLE-ARENA v1.0</div>
+        </div>
+
+        <div class="terminal-content">
+            <!-- プレイヤー情報とスコア -->
+            <div class="battle-header">
+                <div class="player-info left">
+                    <div class="player-avatar">🛡️</div>
+                    <div class="player-details">
+                        <div class="player-name" id="player1Name">プレイヤー1</div>
+                        <div class="player-score" id="player1Score">0</div>
+                    </div>
+                </div>
+                
+                <div class="battle-status">
+                    <div class="round-info">
+                        <span id="currentRound">1</span> / 5
+                    </div>
+                    <div class="timer-container">
+                        <div class="timer" id="timer">30</div>
+                        <div class="timer-bar">
+                            <div class="timer-progress" id="timerProgress"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="player-info right">
+                    <div class="player-avatar">⚔️</div>
+                    <div class="player-details">
+                        <div class="player-name" id="player2Name">プレイヤー2</div>
+                        <div class="player-score" id="player2Score">0</div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- 問いの面 -->
+        <section class="wa-question-area" id="questionArea">
+            <div class="wa-question-loading" id="questionLoading">
+                <div class="wa-loading-spinner"></div>
+                <div class="wa-loading-text">雅なる問いを準備中...</div>
+            </div>
+            
+            <div class="wa-question-content" id="questionContent" style="display: none;">
+                <div class="wa-category-badge" id="categoryBadge">雅なる学問</div>
+                
+                <div class="wa-story-section" id="storySection">
+                    <div class="wa-story-title">📜 物語</div>
+                    <div class="wa-story-text" id="storyText">雅なる物語がここに綾なされます...</div>
+                </div>
+                
+                <div class="wa-question-section">
+                    <div class="wa-question-title">❓ 問い</div>
+                    <div class="wa-question-text" id="questionText">知識を試す問いがここに表れます</div>
+                </div>
+                
+                <div class="wa-options-container" id="optionsContainer">
+                    <div class="wa-option" data-option="0">
+                        <div class="wa-option-letter">甲</div>
+                        <div class="wa-option-text">選択肢1</div>
+                    </div>
+                    <div class="wa-option" data-option="1">
+                        <div class="wa-option-letter">乙</div>
+                        <div class="wa-option-text">選択肢2</div>
+                    </div>
+                    <div class="wa-option" data-option="2">
+                        <div class="wa-option-letter">丙</div>
+                        <div class="wa-option-text">選択肢3</div>
+                    </div>
+                    <div class="wa-option" data-option="3">
+                        <div class="wa-option-letter">丁</div>
+                        <div class="wa-option-text">選択肢4</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 結果の面 -->
+        <section class="wa-result-area" id="resultArea" style="display: none;">
+            <div class="wa-result-content">
+                <div class="wa-correct-answer" id="correctAnswer">
+                    <div class="wa-result-title">✅ 正解</div>
+                    <div class="wa-correct-option" id="correctOption">乙. 正しき答え</div>
+                </div>
+                
+                <div class="wa-explanation" id="explanation">
+                    <div class="wa-explanation-title">📖 解説</div>
+                    <div class="wa-explanation-text" id="explanationText">雅なる解説がここに綾なされます</div>
+                </div>
+                
+                <div class="wa-player-results" id="playerResults">
+                    <div class="wa-player-result" id="playerResult1">
+                        <div class="wa-result-player">戦士一</div>
+                        <div class="wa-result-choice">選択: 甲</div>
+                        <div class="wa-result-status correct">正解なり!</div>
+                        <div class="wa-result-score">+120点</div>
+                    </div>
+                    <div class="wa-player-result" id="playerResult2">
+                        <div class="wa-result-player">戦士二</div>
+                        <div class="wa-result-choice">選択: 丙</div>
+                        <div class="wa-result-status incorrect">惜しく間違い</div>
+                        <div class="wa-result-score">+0点</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 最終結果 -->
+        <section class="wa-final-result" id="finalResult" style="display: none;">
+            <div class="wa-final-content">
+                <div class="wa-winner-announcement" id="winnerAnnouncement">
+                    <div class="wa-winner-crown">👑</div>
+                    <div class="wa-winner-text">勝者: 雅なる戦士</div>
+                    <div class="wa-winner-score">最終武勲: 480点</div>
+                </div>
+                
+                <div class="wa-final-scores" id="finalScores">
+                    <div class="wa-final-score-item">
+                        <span class="wa-score-player">戦士一</span>
+                        <span class="wa-score-points">480点</span>
+                    </div>
+                    <div class="wa-final-score-item">
+                        <span class="wa-score-player">戦士二</span>
+                        <span class="wa-score-points">320点</span>
+                    </div>
+                </div>
+                
+                <div class="wa-btn-group" style="margin-top: 2rem;">
+                    <button class="wa-btn wa-btn-secondary" onclick="goHome()">
+                        <span>🏠</span>
+                        <span>雅学の間を出る</span>
+                    </button>
+                    <button class="wa-btn wa-btn-primary" onclick="playAgain()">
+                        <span>⚔️</span>
+                        <span>再び戦いを挑む</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 正解時の美しきこと -->
+        <div class="wa-celebration" id="celebration" style="display: none;">
+            <div class="wa-fireworks">
+                <div class="wa-firework">🌸</div>
+                <div class="wa-firework">🌺</div>
+                <div class="wa-firework">🌌</div>
+                <div class="wa-firework">✨</div>
+                <div class="wa-firework">🎆</div>
+            </div>
+            <div class="wa-celebration-text">🌸 正解なり！ 🌸</div>
+        </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/socket.js"></script>
+    <script>
+        // URL パラメータから情報を取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('roomId');
+        const playerName = urlParams.get('playerName');
+        const userRole = urlParams.get('role') || 'guest';
+        
+        if (!roomId || !playerName) {
+            alert('クイズ情報が不正です。');
+            window.location.href = 'index.html';
+        }
+        
+        let socket;
+        let currentQuestion = null;
+        let selectedOption = null;
+        let timeLeft = 30;
+        let timerInterval = null;
+        let isAnswered = false;
+        let gameEnded = false;
+        
+        // Socket.io 接続
+        function initializeSocket() {
+            socket = io();
+            
+            socket.on('connect', () => {
+                console.log('クイズバトルに接続しました');
+                // すでにルームに参加済みのはず
+            });
+            
+            socket.on('new_question', (questionData) => {
+                console.log('新しい問題:', questionData);
+                showNewQuestion(questionData);
+            });
+            
+            socket.on('question_result', (resultData) => {
+                console.log('問題結果:', resultData);
+                showQuestionResult(resultData);
+            });
+            
+            socket.on('quiz_finished', (finalData) => {
+                console.log('クイズ終了:', finalData);
+                showFinalResult(finalData);
+            });
+            
+            socket.on('player_disconnected', (data) => {
+                alert(`${data.playerName}さんが切断されました。`);
+                goHome();
+            });
+        }
+        
+        function showNewQuestion(questionData) {
+            currentQuestion = questionData;
+            selectedOption = null;
+            isAnswered = false;
+            timeLeft = questionData.timeLimit || 30;
+            
+            // UI更新
+            document.getElementById('currentRound').textContent = questionData.round;
+            document.getElementById('roundStatus').textContent = `${questionData.round}/5`;
+            document.getElementById('categoryBadge').textContent = questionData.category;
+            document.getElementById('storyText').textContent = questionData.story;
+            document.getElementById('questionText').textContent = questionData.question;
+            
+            // 選択肢設定
+            const options = document.querySelectorAll('.wa-option');
+            options.forEach((option, index) => {
+                option.querySelector('.wa-option-text').textContent = questionData.options[index];
+                option.classList.remove('selected', 'correct', 'incorrect', 'disabled');
+                option.onclick = () => selectOption(index);
+            });
+            
+            // 画面切り替え
+            document.getElementById('questionLoading').style.display = 'none';
+            document.getElementById('questionContent').style.display = 'block';
+            document.getElementById('resultArea').style.display = 'none';
+            
+            // タイマー開始
+            startTimer();
+        }
+        
+        function selectOption(optionIndex) {
+            if (isAnswered || timeLeft <= 0) return;
+            
+            selectedOption = optionIndex;
+            isAnswered = true;
+            
+            // 選択肢の見た目を更新
+            document.querySelectorAll('.wa-option').forEach((option, index) => {
+                option.classList.remove('selected');
+                option.classList.add('disabled');
+                if (index === optionIndex) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            // サーバーに回答を送信
+            socket.emit('submit_answer', {
+                questionIndex: currentQuestion.round - 1,
+                selectedOption: optionIndex,
+                timeLeft: timeLeft
+            });
+            
+            console.log(`選択: ${optionIndex + 1}, 残り時間: ${timeLeft}`);
+        }
+        
+        function startTimer() {
+            document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('timerStatus').textContent = `${timeLeft}s`;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                document.getElementById('timerStatus').textContent = `${timeLeft}s`;
+                
+                // プログレスバー更新
+                const progress = ((currentQuestion?.timeLimit || 30) - timeLeft) / (currentQuestion?.timeLimit || 30) * 100;
+                document.getElementById('timerProgress').style.width = `${progress}%`;
+                
+                // 色変更
+                if (timeLeft <= 10) {
+                    document.getElementById('timer').classList.add('urgent');
+                    document.getElementById('timerProgress').classList.add('urgent');
+                }
+                
+                // 時間切れ
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    if (!isAnswered) {
+                        // 未回答でも送信
+                        socket.emit('submit_answer', {
+                            questionIndex: currentQuestion.round - 1,
+                            selectedOption: null,
+                            timeLeft: 0
+                        });
+                        isAnswered = true;
+                    }
+                }
+            }, 1000);
+        }
+        
+        function showQuestionResult(resultData) {
+            clearInterval(timerInterval);
+            
+            // 正解の選択肢をハイライト
+            const correctIndex = resultData.correctAnswer;
+            document.querySelectorAll('.option').forEach((option, index) => {
+                if (index === correctIndex) {
+                    option.classList.add('correct');
+                }
+                if (selectedOption !== null && index === selectedOption && index !== correctIndex) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // 結果表示
+            setTimeout(() => {
+                document.getElementById('questionContent').style.display = 'none';
+                document.getElementById('resultArea').style.display = 'block';
+                
+                // 結果詳細
+                const correctOptionText = currentQuestion.options[correctIndex];
+                const letters = ['A', 'B', 'C', 'D'];
+                document.getElementById('correctOption').textContent = `${letters[correctIndex]}. ${correctOptionText}`;
+                document.getElementById('explanationText').textContent = resultData.explanation;
+                
+                // プレイヤー結果
+                resultData.results.forEach((result, index) => {
+                    const resultElement = document.getElementById(`playerResult${index + 1}`);
+                    resultElement.querySelector('.result-player').textContent = result.playerName;
+                    
+                    if (result.selectedOption !== null) {
+                        resultElement.querySelector('.result-choice').textContent = `選択: ${letters[result.selectedOption]}`;
+                    } else {
+                        resultElement.querySelector('.result-choice').textContent = '未回答';
+                    }
+                    
+                    const statusElement = resultElement.querySelector('.result-status');
+                    if (result.isCorrect) {
+                        statusElement.textContent = '正解!';
+                        statusElement.className = 'result-status correct';
+                        
+                        // 正解アニメーション
+                        if (result.playerName === playerName) {
+                            showCelebration();
+                        }
+                    } else {
+                        statusElement.textContent = '不正解';
+                        statusElement.className = 'result-status incorrect';
+                    }
+                    
+                    const scoreGain = result.score - (resultData.prevScores?.[result.playerName] || 0);
+                    resultElement.querySelector('.result-score').textContent = `+${scoreGain}点`;
+                    
+                    // スコア更新
+                    if (index === 0) {
+                        document.getElementById('player1Name').textContent = result.playerName;
+                        document.getElementById('player1Score').textContent = result.score;
+                    } else {
+                        document.getElementById('player2Name').textContent = result.playerName;
+                        document.getElementById('player2Score').textContent = result.score;
+                    }
+                });
+            }, 2000);
+        }
+        
+        function showCelebration() {
+            const celebration = document.getElementById('celebration');
+            celebration.style.display = 'block';
+            
+            setTimeout(() => {
+                celebration.style.display = 'none';
+            }, 3000);
+        }
+        
+        function showFinalResult(finalData) {
+            gameEnded = true;
+            document.getElementById('gameStatus').textContent = 'FINISHED';
+            
+            setTimeout(() => {
+                document.getElementById('resultArea').style.display = 'none';
+                document.getElementById('finalResult').style.display = 'block';
+                
+                const winner = finalData.winner;
+                document.getElementById('winnerAnnouncement').innerHTML = `
+                    <div class="winner-crown">👑</div>
+                    <div class="winner-text">勝者: ${winner.playerName}</div>
+                    <div class="winner-score">最終スコア: ${winner.score}点</div>
+                `;
+                
+                const scoresHtml = finalData.results.map(result => `
+                    <div class="final-score-item">
+                        <span class="score-player">${result.playerName}</span>
+                        <span class="score-points">${result.score}点</span>
+                    </div>
+                `).join('');
+                
+                document.getElementById('finalScores').innerHTML = scoresHtml;
+            }, 3000);
+        }
+        
+        function goHome() {
+            if (socket) {
+                socket.disconnect();
+            }
+            window.location.href = 'index.html';
+        }
+        
+        function playAgain() {
+            window.location.href = `matching.html?roomId=${encodeURIComponent(roomId + '_new')}&playerName=${encodeURIComponent(playerName)}`;
+        }
+        
+        // ページロード時の初期化
+        window.onload = () => {
+            initializeSocket();
+        };
+        
+        // ページ離脱時のクリーンアップ
+        window.addEventListener('beforeunload', () => {
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+        
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            if (gameEnded || isAnswered) return;
+            
+            const keyMap = {
+                '1': 0, 'a': 0, 'A': 0,
+                '2': 1, 'b': 1, 'B': 1,
+                '3': 2, 'c': 2, 'C': 2,
+                '4': 3, 'd': 3, 'D': 3
+            };
+            
+            if (keyMap.hasOwnProperty(e.key)) {
+                selectOption(keyMap[e.key]);
+            }
+        });
+    </script>
+</body>
+</html>

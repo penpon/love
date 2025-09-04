@@ -1,0 +1,28 @@
+{
+  "name": "cs-learning-quiz-battle",
+  "version": "1.0.0",
+  "description": "CS学習用オンライン2人対戦クイズゲーム - 短歌×戦争×恋愛×CSの物語で学習",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js"
+  },
+  "keywords": [
+    "computer-science",
+    "quiz",
+    "learning",
+    "multiplayer",
+    "socket.io",
+    "education"
+  ],
+  "author": "nana",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

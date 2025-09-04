@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雅なる対戦の間 - CS学習クイズバトル</title>
+    <link rel="stylesheet" href="css/taisho.css">
+</head>
+<body>
+    <!-- 四季の装飾要素 -->
+    <div class="seasonal-decoration" id="seasonalDecoration"></div>
+
+    <main class="washi-container wa-fade-in">
+        <!-- ヘッダー -->
+        <header class="wa-header">
+            <h1 class="wa-title">雅なる対戦の間</h1>
+            <p class="wa-subtitle">CS雅学クイズバトル - 心と知識を賭した華麗なる戦い</p>
+            <div class="wa-divider"></div>
+        </header>
+
+        <!-- ルーム情報表示 -->
+        <section class="wa-room-info">
+            <div class="wa-card">
+                <div class="wa-card-title">🏛️ 雅学の間</div>
+                <div class="wa-card-content">
+                    <div class="wa-info-row">
+                        <span class="wa-info-label">間の名:</span>
+                        <span class="wa-info-value" id="roomIdDisplay"></span>
+                    </div>
+                    <div class="wa-info-row">
+                        <span class="wa-info-label">あなたの雅号:</span>
+                        <span class="wa-info-value" id="playerNameDisplay"></span>
+                    </div>
+                    <div class="wa-info-row">
+                        <span class="wa-info-label">役割:</span>
+                        <span class="wa-info-value" id="roleDisplay">未設定</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- マッチング状態 -->
+        <section class="wa-matching-status" id="matchingStatus">
+            <div class="wa-loading-animation">
+                <div class="wa-spinner"></div>
+                <div class="wa-loading-text">雅なる対戦相手を探しております...</div>
+                <div class="wa-loading-dots">
+                    <span class="wa-dot"></span>
+                    <span class="wa-dot"></span>
+                    <span class="wa-dot"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 対戦者一覧 -->
+        <section class="wa-players-list" id="playersList" style="display: none;">
+            <h3 class="wa-section-title">⚔️ 雅なる戦士たち</h3>
+            <div class="wa-player-cards">
+                <div class="wa-player-card" id="player1">
+                    <div class="wa-player-avatar">🌸</div>
+                    <div class="wa-player-info">
+                        <div class="wa-player-name">待機中...</div>
+                        <div class="wa-player-status">準備中</div>
+                        <div class="wa-player-role" id="player1Role"></div>
+                    </div>
+                </div>
+                
+                <div class="wa-vs-divider">
+                    <span class="wa-vs-text">VS</span>
+                    <div class="wa-heart-separator">🌌</div>
+                </div>
+                
+                <div class="wa-player-card" id="player2">
+                    <div class="wa-player-avatar">🌺</div>
+                    <div class="wa-player-info">
+                        <div class="wa-player-name">待機中...</div>
+                        <div class="wa-player-status">準備中</div>
+                        <div class="wa-player-role" id="player2Role"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 準備セクション -->
+        <section class="wa-ready-section" id="readySection" style="display: none;">
+            <div class="wa-card">
+                <div class="wa-card-title">⚡ 雅学対戦の規則</div>
+                <div class="wa-card-content">
+                    <div class="wa-battle-rules">
+                        <div class="wa-rule">📜 全5問の四選一問</div>
+                        <div class="wa-rule">🌸 1問30秒の時の制限</div>
+                        <div class="wa-rule">🏅 正解で名誉を獲得</div>
+                        <div class="wa-rule">✨ 迅速なる答えで特別加点</div>
+                        <div class="wa-rule">🎆 最高得点者が勝利の栄冠</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="wa-btn-group" style="margin-top: 2rem;">
+                <button class="wa-btn wa-btn-primary" id="readyBtn" onclick="playerReady()">
+                    <span>⚔️</span>
+                    <span>準備よろし</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- カウントダウンオーバーレイ -->
+        <div class="wa-countdown-overlay" id="countdownOverlay" style="display: none;">
+            <div class="wa-countdown-content">
+                <div class="wa-countdown-title">⚔️ 雅なる対戦開始</div>
+                <div class="wa-countdown-number" id="countdownNumber">3</div>
+                <div class="wa-countdown-message">心の準備はいかがでしょうか</div>
+            </div>
+        </div>
+
+        <!-- 接続状態 -->
+        <div class="wa-connection-status">
+            <div class="wa-status-indicator" id="connectionStatus">
+                <span class="wa-status-dot success"></span>
+                <span class="wa-status-text">雅なる間に接続中...</span>
+            </div>
+        </div>
+
+        <!-- 戻るボタン -->
+        <div class="wa-btn-group" style="margin-top: 2rem;">
+            <button class="wa-btn wa-btn-secondary" onclick="goBack()">
+                <span>🏠</span>
+                <span>雅学の間を出る</span>
+            </button>
+        </div>
+    </main>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/socket.js"></script>
+    <script>
+        // URL パラメータから情報を取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('roomId');
+        const playerName = urlParams.get('playerName');
+        const userRole = urlParams.get('role') || 'guest';
+        
+        if (!roomId || !playerName) {
+            alert('ルーム情報が不正です。トップページに戻ります。');
+            window.location.href = 'index.html';
+        }
+        
+        // 表示を更新
+        document.getElementById('roomIdDisplay').textContent = roomId;
+        document.getElementById('playerNameDisplay').textContent = playerName;
+        
+        // 役割表示
+        const roleDisplay = document.getElementById('roleDisplay');
+        if (userRole === 'owner') {
+            roleDisplay.textContent = '👑 主催者';
+        } else {
+            roleDisplay.textContent = '🎋 参加者';
+        }
+        
+        let socket;
+        let isReady = false;
+        let matchFound = false;
+        
+        // Socket.io 接続
+        function initializeSocket() {
+            socket = io();
+            
+            socket.on('connect', () => {
+                console.log('サーバーに接続しました');
+                document.getElementById('connectionStatus').innerHTML = 
+                    '<span class="wa-status-dot success"></span><span class="wa-status-text">接続完了</span>';
+                
+                // ルームに参加
+                socket.emit('join_room', { roomId, playerName, role: userRole, mode: 'quiz' });
+            });
+            
+            socket.on('disconnect', () => {
+                console.log('サーバーから切断されました');
+                document.getElementById('connectionStatus').innerHTML = 
+                    '<span class="wa-status-dot error"></span><span class="wa-status-text">接続が切断されました</span>';
+            });
+            
+            socket.on('room_full', () => {
+                alert('このルームは満室です。別のルームIDをお試しください。');
+                window.location.href = 'index.html';
+            });
+            
+            socket.on('room_status', (data) => {
+                console.log('ルーム状況更新:', data);
+                updateRoomStatus(data);
+            });
+            
+            socket.on('match_found', (data) => {
+                console.log('マッチング成功:', data);
+                matchFound = true;
+                showMatchFound(data);
+            });
+            
+            socket.on('player_disconnected', (data) => {
+                alert(`${data.playerName}さんが切断されました。`);
+                location.reload();
+            });
+            
+            // クイズ開始
+            socket.on('new_question', (data) => {
+                console.log('クイズ開始:', data);
+                // クイズ画面に遷移
+                window.location.href = `quiz.html?roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&role=${encodeURIComponent(userRole)}`;
+            });
+        }
+        
+        function updateRoomStatus(data) {
+            const players = data.players;
+            const playerCount = players.length;
+            
+            if (playerCount === 2) {
+                // 2人揃った場合
+                document.getElementById('matchingStatus').style.display = 'none';
+                document.getElementById('playersList').style.display = 'block';
+                document.getElementById('readySection').style.display = 'block';
+                
+                // プレイヤー情報を表示
+                const player1Card = document.getElementById('player1');
+                const player2Card = document.getElementById('player2');
+                
+                player1Card.querySelector('.wa-player-name').textContent = players[0].name;
+                player1Card.querySelector('.wa-player-status').textContent = players[0].ready ? '準備完了' : '準備中';
+                player1Card.classList.toggle('ready', players[0].ready);
+                
+                player2Card.querySelector('.wa-player-name').textContent = players[1].name;
+                player2Card.querySelector('.wa-player-status').textContent = players[1].ready ? '準備完了' : '準備中';
+                player2Card.classList.toggle('ready', players[1].ready);
+                
+                // 役割表示
+                const player1Role = document.getElementById('player1Role');
+                const player2Role = document.getElementById('player2Role');
+                
+                player1Role.textContent = players[0].role === 'owner' ? '👑 主催' : '🎋 参加';
+                player2Role.textContent = players[1].role === 'owner' ? '👑 主催' : '🎋 参加';
+                
+                // 自分のカードをハイライト
+                if (players[0].name === playerName) {
+                    player1Card.classList.add('self');
+                } else {
+                    player2Card.classList.add('self');
+                }
+            } else {
+                // 待機中
+                document.getElementById('matchingStatus').style.display = 'block';
+                document.getElementById('playersList').style.display = 'none';
+                document.getElementById('readySection').style.display = 'none';
+            }
+        }
+        
+        function showMatchFound(data) {
+            // マッチング成功のエフェクト
+            document.getElementById('matchingStatus').innerHTML = 
+                '<div class="wa-match-found"><div class="wa-match-icon">🌸</div><div class="wa-match-text">雅なる出会い成りたり！</div></div>';
+        }
+        
+        function playerReady() {
+            if (!isReady) {
+                isReady = true;
+                socket.emit('player_ready');
+                
+                const readyBtn = document.getElementById('readyBtn');
+                readyBtn.innerHTML = '<span>✅</span><span>準備整いました</span>';
+                readyBtn.classList.add('ready');
+                readyBtn.disabled = true;
+                
+                // カウントダウン開始（両方準備完了の場合）
+                setTimeout(() => {
+                    if (document.querySelectorAll('.wa-player-card.ready').length === 2) {
+                        startCountdown();
+                    }
+                }, 1000);
+            }
+        }
+        
+        function startCountdown() {
+            document.getElementById('countdownOverlay').style.display = 'flex';
+            let count = 3;
+            
+            const countdownInterval = setInterval(() => {
+                document.getElementById('countdownNumber').textContent = count;
+                
+                if (count <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('countdownOverlay').style.display = 'none';
+                } else {
+                    count--;
+                }
+            }, 1000);
+        }
+        
+        function goBack() {
+            if (socket) {
+                socket.disconnect();
+            }
+            window.location.href = 'index.html';
+        }
+        
+        // ページロード時の初期化
+        window.onload = () => {
+            initializeSocket();
+            
+            // 四季装飾の初期化
+            generateSeasonalElements('spring');
+            setInterval(() => changeSeason(), 45000);
+        };
+        
+        // 四季装飾関数（index.htmlから流用）
+        const seasons = ['spring', 'summer', 'autumn', 'winter'];
+        let currentSeasonIndex = 0;
+        
+        function changeSeason() {
+            const seasonElement = document.getElementById('seasonalDecoration');
+            currentSeasonIndex = (currentSeasonIndex + 1) % seasons.length;
+            const season = seasons[currentSeasonIndex];
+            seasonElement.className = `seasonal-decoration season-${season}`;
+            generateSeasonalElements(season);
+        }
+        
+        function generateSeasonalElements(season) {
+            const container = document.getElementById('seasonalDecoration');
+            container.innerHTML = '';
+            
+            const elementCount = 4; // マッチング画面では少なめに
+            
+            for (let i = 0; i < elementCount; i++) {
+                const element = document.createElement('div');
+                
+                switch (season) {
+                    case 'spring':
+                        element.className = 'sakura-petal';
+                        element.style.left = Math.random() * 100 + '%';
+                        element.style.animationDelay = Math.random() * 8 + 's';
+                        element.style.animationDuration = (6 + Math.random() * 4) + 's';
+                        break;
+                        
+                    case 'summer':
+                        element.className = 'summer-leaf';
+                        element.style.cssText = `
+                            position: absolute;
+                            width: 6px;
+                            height: 6px;
+                            background: var(--tsuyu);
+                            border-radius: 50% 0 50% 0;
+                            left: ${Math.random() * 100}%;
+                            animation: summerSway ${4 + Math.random() * 3}s ease-in-out infinite;
+                            animation-delay: ${Math.random() * 4}s;
+                            opacity: 0.2;
+                        `;
+                        break;
+                        
+                    case 'autumn':
+                        element.className = 'momiji-leaf';
+                        element.style.left = Math.random() * 100 + '%';
+                        element.style.animationDelay = Math.random() * 10 + 's';
+                        element.style.animationDuration = (8 + Math.random() * 4) + 's';
+                        break;
+                        
+                    case 'winter':
+                        element.className = 'snow-flake';
+                        element.innerHTML = '❄';
+                        element.style.cssText = `
+                            position: absolute;
+                            color: var(--yuki);
+                            font-size: ${4 + Math.random() * 4}px;
+                            left: ${Math.random() * 100}%;
+                            animation: snowFall ${6 + Math.random() * 6}s linear infinite;
+                            animation-delay: ${Math.random() * 6}s;
+                            opacity: 0.4;
+                        `;
+                        break;
+                }
+                
+                container.appendChild(element);
+            }
+        }
+        
+        // ページ離脱時のクリーンアップ
+        window.addEventListener('beforeunload', () => {
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>

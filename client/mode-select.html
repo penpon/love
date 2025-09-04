@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学習方式選択 - CS学習クイズバトル</title>
+    <link rel="stylesheet" href="css/taisho.css">
+</head>
+<body>
+    <!-- 四季の装飾要素 -->
+    <div class="seasonal-decoration" id="seasonalDecoration"></div>
+
+    <main class="washi-container wa-fade-in">
+        <!-- ヘッダー -->
+        <header class="wa-header">
+            <h1 class="wa-title">学習の道を選ぶ</h1>
+            <p class="wa-subtitle">美しき知識への二つの扉</p>
+            <div class="wa-divider"></div>
+        </header>
+
+        <!-- ルーム情報表示 -->
+        <div class="wa-room-info">
+            <div class="wa-info-grid">
+                <div class="wa-info-item">
+                    <span class="wa-info-icon">🏮</span>
+                    <span class="wa-info-label">ルーム</span>
+                    <span class="wa-info-value" id="roomName">-</span>
+                </div>
+                <div class="wa-info-item">
+                    <span class="wa-info-icon" id="roleIcon">👑</span>
+                    <span class="wa-info-label">役割</span>
+                    <span class="wa-info-value" id="roleName">主催者</span>
+                </div>
+                <div class="wa-info-item">
+                    <span class="wa-info-icon">🎭</span>
+                    <span class="wa-info-label">お名前</span>
+                    <span class="wa-info-value" id="playerName">-</span>
+                </div>
+                <div class="wa-info-item">
+                    <span class="wa-info-icon">👥</span>
+                    <span class="wa-info-label">参加者</span>
+                    <span class="wa-info-value" id="participantCount">2名</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- モード選択 -->
+        <section class="wa-mode-selection-main">
+            <h2 class="wa-section-title">🌸 学習の方式をお選びください</h2>
+            
+            <div class="wa-mode-cards-large">
+                <!-- 学習モード -->
+                <div class="wa-mode-card-large" onclick="selectMode('learning')" data-mode="learning">
+                    <div class="wa-mode-decoration">
+                        <div class="wa-decoration-element">🌸</div>
+                        <div class="wa-decoration-element">📜</div>
+                        <div class="wa-decoration-element">💝</div>
+                    </div>
+                    
+                    <div class="wa-mode-icon-large">📚</div>
+                    <h3 class="wa-mode-title-large">学習モード</h3>
+                    <p class="wa-mode-subtitle">美しき物語で学ぶCS</p>
+                    
+                    <div class="wa-mode-description-large">
+                        恋愛物語に包まれながら、<br>
+                        コンピューターサイエンスの神髄を<br>
+                        優雅に習得いたします
+                    </div>
+                    
+                </div>
+
+                <!-- クイズモード -->
+                <div class="wa-mode-card-large" onclick="selectMode('quiz')" data-mode="quiz">
+                    <div class="wa-mode-decoration">
+                        <div class="wa-decoration-element">⚔️</div>
+                        <div class="wa-decoration-element">🏆</div>
+                        <div class="wa-decoration-element">⚡</div>
+                    </div>
+                    
+                    <div class="wa-mode-icon-large">⚔️</div>
+                    <h3 class="wa-mode-title-large">クイズモード</h3>
+                    <p class="wa-mode-subtitle">華麗なる知識の対戦</p>
+                    
+                    <div class="wa-mode-description-large">
+                        学びし知識を武器として、<br>
+                        緊張感あふれるリアルタイム対戦で<br>
+                        互いの実力を競い合います
+                    </div>
+                    
+                </div>
+            </div>
+
+            <!-- 開始ボタン -->
+            <div class="wa-btn-group-large">
+                <button class="wa-btn wa-btn-outline" onclick="goBack()">
+                    <span>🔙</span>
+                    <span>前の画面に戻る</span>
+                </button>
+                <button class="wa-btn wa-btn-primary wa-btn-large" id="startBtn" onclick="startSelectedMode()" disabled>
+                    <span id="startIcon">🌸</span>
+                    <span id="startText">学習の扉を開く</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ステータスバー -->
+        <div class="wa-status">
+            <div class="wa-status-item">
+                <span class="wa-status-dot connected"></span>
+                <span>接続状態: 準備完了</span>
+            </div>
+            <div class="wa-status-item">
+                <span>🎌 選択状態: <span id="statusSelection">未選択</span></span>
+            </div>
+            <div class="wa-status-item">
+                <span>⏰ 待機時間: <span id="waitingTime">00:00</span></span>
+            </div>
+        </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/socket.js"></script>
+    <script>
+        // URLパラメータから情報を取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const userRole = urlParams.get('role') || 'owner';
+        const roomId = urlParams.get('roomId') || '';
+        const playerName = urlParams.get('playerName') || '';
+        
+        let selectedMode = '';
+        let socket = null;
+        let startTime = Date.now();
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            setupPageInfo();
+            generateSeasonalElements();
+            startWaitingTimer();
+            initializeSocket();
+            
+            // アニメーション軽減設定の確認
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.getElementById('seasonalDecoration').style.display = 'none';
+                document.querySelectorAll('.wa-decoration-element').forEach(el => {
+                    el.style.animation = 'none';
+                });
+            }
+        });
+        
+        // ページ情報の設定
+        function setupPageInfo() {
+            document.getElementById('roomName').textContent = roomId;
+            document.getElementById('playerName').textContent = playerName;
+            
+            if (userRole === 'owner') {
+                document.getElementById('roleIcon').textContent = '👑';
+                document.getElementById('roleName').textContent = '主催者';
+            } else {
+                document.getElementById('roleIcon').textContent = '🎋';
+                document.getElementById('roleName').textContent = '参加者';
+            }
+        }
+        
+        // Socket.io初期化
+        function initializeSocket() {
+            socket = io();
+            
+            socket.on('connect', () => {
+                console.log('モード選択画面でサーバーに接続');
+                // ルーム再参加
+                socket.emit('join_room', {
+                    roomId: roomId,
+                    playerName: playerName,
+                    role: userRole
+                });
+            });
+            
+            socket.on('room_status', (data) => {
+                const playerCount = data.players ? data.players.length : 0;
+                document.getElementById('participantCount').textContent = `${playerCount}名`;
+            });
+            
+            socket.on('mode_selected', (data) => {
+                if (userRole === 'guest' && data.mode) {
+                    // Guestの場合は強制的に同じモードを選択
+                    selectedMode = data.mode;
+                    updateSelectedMode(data.mode, true);
+                }
+            });
+            
+            socket.on('mode_started', (data) => {
+                // モード開始の通知を受けた場合
+                proceedToSelectedMode(data.mode, data);
+            });
+        }
+        
+        // モード選択
+        function selectMode(mode) {
+            if (userRole === 'guest') {
+                // Guestは主催者の選択を待つ
+                showGuestWaitingMessage();
+                return;
+            }
+            
+            selectedMode = mode;
+            updateSelectedMode(mode, false);
+            
+            // Ownerの選択を通知
+            if (socket) {
+                socket.emit('select_mode', {
+                    roomId: roomId,
+                    mode: mode
+                });
+            }
+        }
+        
+        function updateSelectedMode(mode, isForced = false) {
+            // 全カードの選択状態をリセット
+            document.querySelectorAll('.wa-mode-card-large').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // 選択されたカードをハイライト
+            document.querySelector(`[data-mode="${mode}"]`).classList.add('selected');
+            
+            // ガイダンス表示
+            showModeGuidance(mode, isForced);
+            
+            // ボタンの状態更新
+            const startBtn = document.getElementById('startBtn');
+            const startIcon = document.getElementById('startIcon');
+            const startText = document.getElementById('startText');
+            const statusSelection = document.getElementById('statusSelection');
+            
+            if (mode === 'learning') {
+                startIcon.textContent = '🌸';
+                startText.textContent = '学習の扉を開く';
+                statusSelection.textContent = '学習モード';
+                statusSelection.style.color = 'var(--take)';
+            } else if (mode === 'quiz') {
+                startIcon.textContent = '⚔️';
+                startText.textContent = '対戦の場へ向かう';
+                statusSelection.textContent = 'クイズモード';
+                statusSelection.style.color = 'var(--enjhi)';
+            }
+            
+            startBtn.disabled = false;
+            startBtn.classList.add('wa-pulse');
+        }
+        
+        function showModeGuidance(mode, isForced) {
+            const guidance = document.getElementById('selectionGuidance');
+            const guidanceTitle = document.getElementById('guidanceTitle');
+            const guidanceContent = document.getElementById('guidanceContent');
+            
+            guidance.style.display = 'block';
+            
+            if (mode === 'learning') {
+                guidanceTitle.textContent = '🌸 学習モードについて';
+                if (isForced) {
+                    guidanceContent.textContent = 
+                        '主催者が学習モードを選択しました。美しい物語を共に読み進め、知識を深めてまいりましょう。';
+                } else {
+                    guidanceContent.textContent = 
+                        '学習モードでは、主催者の操作に合わせて参加者の画面も同期されます。美しい物語を共に読み進め、知識を深めてまいりましょう。';
+                }
+            } else if (mode === 'quiz') {
+                guidanceTitle.textContent = '⚔️ クイズモードについて';
+                if (isForced) {
+                    guidanceContent.textContent = 
+                        '主催者がクイズモードを選択しました。学んだ知識を武器に、華麗なる対戦に挑みましょう。';
+                } else {
+                    guidanceContent.textContent = 
+                        'クイズモードでは、リアルタイムで対戦を行います。制限時間内に正解を目指し、互いの実力を競い合いましょう。';
+                }
+            }
+        }
+        
+        function showGuestWaitingMessage() {
+            // Guestが直接モードを選択しようとした場合の案内
+            const modal = document.createElement('div');
+            modal.className = 'wa-modal active';
+            modal.innerHTML = `
+                <div class="wa-modal-content">
+                    <h3 style="color: var(--ai); margin-bottom: 1rem;">🎋 参加者の皆様</h3>
+                    <p style="margin-bottom: 1.5rem;">
+                        学習方式は主催者が選択いたします。<br>
+                        しばらくお待ちください。
+                    </p>
+                    <button class="wa-btn wa-btn-primary" onclick="this.closest('.wa-modal').remove()">
+                        承知いたしました
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // 選択されたモード開始
+        function startSelectedMode() {
+            if (!selectedMode) {
+                alert('まず学習方式を選択してください。');
+                return;
+            }
+            
+            if (socket) {
+                socket.emit('start_mode', {
+                    roomId: roomId,
+                    mode: selectedMode,
+                    playerName: playerName,
+                    role: userRole
+                });
+            }
+            
+            // 直接遷移
+            proceedToSelectedMode(selectedMode);
+        }
+        
+        function proceedToSelectedMode(mode, data = {}) {
+            const params = new URLSearchParams({
+                role: userRole,
+                roomId: roomId,
+                playerName: playerName
+            });
+            
+            if (mode === 'learning') {
+                window.location.href = `learning.html?${params.toString()}`;
+            } else if (mode === 'quiz') {
+                window.location.href = `matching.html?${params.toString()}`;
+            }
+        }
+        
+        // 待機時間タイマー
+        function startWaitingTimer() {
+            setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('waitingTime').textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+        
+        // 季節装飾の生成
+        function generateSeasonalElements() {
+            const container = document.getElementById('seasonalDecoration');
+            const elements = [
+                { class: 'sakura-petal', count: 4 },
+                { class: 'momiji-leaf', count: 2 }
+            ];
+            
+            elements.forEach(({ class: className, count }) => {
+                for (let i = 0; i < count; i++) {
+                    const element = document.createElement('div');
+                    element.className = className;
+                    element.style.left = Math.random() * 100 + '%';
+                    element.style.animationDelay = Math.random() * 8 + 's';
+                    element.style.animationDuration = (6 + Math.random() * 4) + 's';
+                    container.appendChild(element);
+                }
+            });
+        }
+        
+        function goBack() {
+            if (socket) {
+                socket.disconnect();
+            }
+            window.location.href = `lobby.html?role=${userRole}`;
+        }
+        
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case '1':
+                    if (userRole === 'owner') selectMode('learning');
+                    break;
+                case '2':
+                    if (userRole === 'owner') selectMode('quiz');
+                    break;
+                case 'Enter':
+                    if (selectedMode) {
+                        startSelectedMode();
+                    }
+                    break;
+                case 'Escape':
+                    goBack();
+                    break;
+            }
+        });
+        
+        // ページ離脱時のクリーンアップ
+        window.addEventListener('beforeunload', () => {
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+    </script>
+
+    <style>
+        .wa-section-title {
+            font-family: var(--font-accent);
+            font-size: 1.8rem;
+            color: var(--enjhi);
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+            text-shadow: 1px 1px 0px rgba(178, 45, 53, 0.1);
+        }
+
+        .wa-room-info {
+            background: var(--gradient-sakura);
+            border: 2px solid var(--enjhi);
+            border-radius: var(--border-radius-large);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-xxl);
+        }
+
+        .wa-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .wa-info-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: var(--border-radius);
+        }
+
+        .wa-info-icon {
+            font-size: 1.5rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .wa-info-label {
+            font-family: var(--font-ui);
+            font-weight: 600;
+            color: var(--sumi);
+            min-width: 50px;
+        }
+
+        .wa-info-value {
+            font-family: var(--font-main);
+            color: var(--enjhi);
+            font-weight: 500;
+        }
+
+        .wa-mode-cards-large {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--spacing-xxl);
+            margin: var(--spacing-xxl) 0;
+        }
+
+        .wa-mode-card-large {
+            background: var(--gradient-washi);
+            border: 3px solid var(--ai);
+            border-radius: var(--border-radius-large);
+            padding: var(--spacing-xxl);
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .wa-mode-card-large::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(178, 45, 53, 0.1) 0%, transparent 70%);
+            transform: scale(0);
+            transition: transform 0.8s ease;
+        }
+
+        .wa-mode-card-large:hover::before {
+            transform: scale(1);
+        }
+
+        .wa-mode-card-large:hover {
+            transform: translateY(-10px) scale(1.03);
+            border-color: var(--enjhi);
+            box-shadow: 
+                var(--shadow-strong),
+                0 0 40px rgba(178, 45, 53, 0.3);
+        }
+
+        .wa-mode-card-large.selected {
+            background: var(--gradient-sakura);
+            border-color: var(--enjhi);
+            border-width: 4px;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                var(--shadow-strong),
+                0 0 30px rgba(178, 45, 53, 0.4);
+        }
+
+        .wa-mode-decoration {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .wa-decoration-element {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.1;
+            animation: decorationFloat 6s ease-in-out infinite;
+        }
+
+        .wa-decoration-element:nth-child(1) {
+            top: 10%;
+            right: 15%;
+            animation-delay: 0s;
+        }
+
+        .wa-decoration-element:nth-child(2) {
+            bottom: 20%;
+            left: 10%;
+            animation-delay: 2s;
+        }
+
+        .wa-decoration-element:nth-child(3) {
+            top: 60%;
+            right: 10%;
+            animation-delay: 4s;
+        }
+
+        @keyframes decorationFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.1; }
+            50% { transform: translateY(-10px) rotate(180deg); opacity: 0.3; }
+        }
+
+        .wa-mode-icon-large {
+            font-size: 5rem;
+            margin-bottom: var(--spacing-lg);
+            animation: iconPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .wa-mode-title-large {
+            font-family: var(--font-accent);
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--enjhi);
+            margin-bottom: var(--spacing-sm);
+            text-shadow: 2px 2px 0px rgba(178, 45, 53, 0.1);
+        }
+
+        .wa-mode-subtitle {
+            font-family: var(--font-main);
+            font-size: 1.1rem;
+            color: var(--ai);
+            margin-bottom: var(--spacing-lg);
+            font-style: italic;
+        }
+
+        .wa-mode-description-large {
+            font-family: var(--font-main);
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--sumi);
+            margin-bottom: var(--spacing-lg);
+            text-align: center;
+        }
+
+        .wa-mode-details {
+            width: 100%;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .wa-mode-details h4 {
+            font-family: var(--font-ui);
+            color: var(--enjhi);
+            margin-bottom: var(--spacing-md);
+            text-align: center;
+        }
+
+        .wa-subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: var(--spacing-xs);
+        }
+
+        .wa-subject-item {
+            background: rgba(22, 94, 131, 0.1);
+            color: var(--ai);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.85rem;
+            text-align: center;
+            border: 1px solid rgba(22, 94, 131, 0.2);
+        }
+
+        .wa-battle-info {
+            display: flex;
+            justify-content: space-around;
+            gap: var(--spacing-md);
+        }
+
+        .wa-battle-rule {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .wa-rule-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--enjhi);
+            line-height: 1;
+        }
+
+        .wa-rule-text {
+            font-size: 0.9rem;
+            color: var(--sumi);
+        }
+
+        .wa-mode-features-large {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: var(--spacing-sm);
+            margin-top: auto;
+        }
+
+        .wa-feature-large {
+            background: rgba(47, 82, 51, 0.1);
+            color: var(--take);
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.85rem;
+            text-align: center;
+            border: 1px solid rgba(47, 82, 51, 0.2);
+            font-weight: 500;
+        }
+
+        .wa-selection-guidance {
+            margin: var(--spacing-xl) 0;
+        }
+
+        .wa-btn-group-large {
+            display: flex;
+            gap: var(--spacing-lg);
+            justify-content: center;
+            margin: var(--spacing-xxl) 0;
+        }
+
+        .wa-btn-large {
+            padding: var(--spacing-lg) var(--spacing-xxl);
+            font-size: 1.1rem;
+        }
+
+        .wa-notices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin: var(--spacing-xxl) 0;
+        }
+
+        .wa-notice-card {
+            background: var(--gradient-washi);
+            border: 2px solid var(--take);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+        }
+
+        .wa-notice-card h4 {
+            color: var(--take);
+            margin-bottom: var(--spacing-md);
+            font-family: var(--font-ui);
+        }
+
+        .wa-notice-card ul {
+            padding-left: var(--spacing-lg);
+            list-style-type: none;
+        }
+
+        .wa-notice-card li {
+            position: relative;
+            margin-bottom: var(--spacing-sm);
+            color: var(--sumi);
+            line-height: 1.6;
+        }
+
+        .wa-notice-card li::before {
+            content: '🌸';
+            position: absolute;
+            left: -1.5rem;
+            top: 0;
+        }
+
+        .wa-status-dot.connected {
+            background: var(--take);
+            animation: statusPulse 2s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .wa-mode-cards-large {
+                grid-template-columns: 1fr;
+                gap: var(--spacing-xl);
+            }
+            
+            .wa-mode-card-large {
+                min-height: 400px;
+                padding: var(--spacing-xl);
+            }
+            
+            .wa-mode-icon-large {
+                font-size: 4rem;
+            }
+            
+            .wa-mode-title-large {
+                font-size: 1.8rem;
+            }
+            
+            .wa-info-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            
+            .wa-btn-group-large {
+                flex-direction: column;
+            }
+            
+            .wa-notices {
+                grid-template-columns: 1fr;
+            }
+            
+            .wa-battle-info {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</body>
+</html>

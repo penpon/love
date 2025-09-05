@@ -160,7 +160,7 @@
             }
         }
         
-        // Socket.io初期化（battleパターンに統一）
+        // Socket.io初期化（新しいイベントハンドラーに対応）
         function ensureSocket() {
             if (socket) return socket;
             
@@ -180,8 +180,8 @@
                     return;
                 }
                 
-                // ルーム参加
-                socket.emit('join_room', {
+                // モード選択画面での参加を通知
+                socket.emit('mode_select_join', {
                     roomId: roomId,
                     playerName: playerName,
                     role: userRole
@@ -189,34 +189,56 @@
                 
                 // 接続状態を更新
                 document.querySelector('.wa-status-dot').className = 'wa-status-dot connected';
+                updateConnectionStatus('connected');
             });
             
             socket.on('connect_error', (error) => {
                 console.error('Socket接続エラー:', error);
                 document.querySelector('.wa-status-dot').className = 'wa-status-dot error';
+                updateConnectionStatus('error');
+                showError('サーバーに接続できませんでした。');
             });
             
             socket.on('disconnect', (reason) => {
                 console.log('Socket切断:', reason);
                 document.querySelector('.wa-status-dot').className = 'wa-status-dot disconnected';
+                updateConnectionStatus('disconnected');
             });
             
-            socket.on('room_status', (data) => {
+            // モード選択画面での接続完了
+            socket.on('mode_select_connected', (data) => {
+                console.log('モード選択画面での接続が完了しました:', data);
                 const playerCount = data.players ? data.players.length : 0;
                 document.getElementById('participantCount').textContent = `${playerCount}名`;
             });
             
-            socket.on('mode_selected', (data) => {
-                if (userRole === 'guest' && data.mode) {
-                    // Guestの場合は強制的に同じモードを選択
-                    selectedMode = data.mode;
-                    updateSelectedMode(data.mode, true);
-                }
+            // プレイヤーの再接続通知
+            socket.on('player_reconnected', (data) => {
+                console.log(`${data.playerName} (${data.role}) が再接続しました`);
+                document.getElementById('participantCount').textContent = '2名';
             });
             
-            socket.on('mode_started', (data) => {
-                // モード開始の通知を受けた場合
-                proceedToSelectedMode(data.mode, data);
+            // ルームが見つからない場合
+            socket.on('room_not_found', () => {
+                showError('指定されたルームが見つかりません。ロビーに戻って再度接続してください。');
+            });
+            
+            // 学習モード選択時の遷移
+            socket.on('redirect_to_learning', (data) => {
+                console.log('学習画面への遷移指示を受信:', data);
+                showModeRedirectMessage('learning', data.message);
+                setTimeout(() => {
+                    proceedToSelectedMode('learning');
+                }, 1500);
+            });
+            
+            // クイズモード選択時の遷移
+            socket.on('redirect_to_matching', (data) => {
+                console.log('マッチング画面への遷移指示を受信:', data);
+                showModeRedirectMessage('quiz', data.message);
+                setTimeout(() => {
+                    proceedToSelectedMode('quiz');
+                }, 1500);
             });
             
             return socket;
@@ -236,14 +258,6 @@
             
             selectedMode = mode;
             updateSelectedMode(mode, false);
-            
-            // Ownerの選択を通知
-            if (socket) {
-                socket.emit('select_mode', {
-                    roomId: roomId,
-                    mode: mode
-                });
-            }
         }
         
         function updateSelectedMode(mode, isForced = false) {
@@ -334,17 +348,23 @@
                 return;
             }
             
-            if (socket) {
-                socket.emit('start_mode', {
-                    roomId: roomId,
-                    mode: selectedMode,
-                    playerName: playerName,
-                    role: userRole
-                });
+            if (userRole !== 'owner') {
+                showError('主催者のみがモードを選択できます。');
+                return;
             }
             
-            // 直接遷移
-            proceedToSelectedMode(selectedMode);
+            console.log(`選択されたモード: ${selectedMode}`);
+
+            // サーバーに選択を通知
+            if (socket && socket.connected) {
+                if (selectedMode === 'learning') {
+                    socket.emit('select_learning_mode', { roomId: roomId });
+                } else if (selectedMode === 'quiz') {
+                    socket.emit('select_quiz_mode', { roomId: roomId });
+                }
+            } else {
+                showError('サーバーとの接続が確立されていません。');
+            }
         }
         
         function proceedToSelectedMode(mode, data = {}) {
@@ -361,6 +381,63 @@
             }
         }
         
+        // 接続状態更新
+        function updateConnectionStatus(status) {
+            const statusText = document.querySelector('.wa-status .wa-status-item span:last-child');
+            if (statusText) {
+                switch (status) {
+                    case 'connecting':
+                        statusText.textContent = '接続状態: 接続中...';
+                        break;
+                    case 'connected':
+                        statusText.textContent = '接続状態: 準備完了';
+                        break;
+                    case 'error':
+                        statusText.textContent = '接続状態: 接続エラー';
+                        break;
+                    case 'disconnected':
+                        statusText.textContent = '接続状態: 切断されました';
+                        break;
+                }
+            }
+        }
+
+        // エラー表示
+        function showError(message) {
+            const modal = document.createElement('div');
+            modal.className = 'wa-modal active';
+            modal.innerHTML = `
+                <div class="wa-modal-content">
+                    <h3 style="color: var(--enjhi); margin-bottom: 1rem;">⚠️ エラー</h3>
+                    <p style="margin-bottom: 1.5rem;">${message}</p>
+                    <button class="wa-btn wa-btn-primary" onclick="this.closest('.wa-modal').remove()">
+                        確認
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // モード遷移メッセージ表示
+        function showModeRedirectMessage(mode, message) {
+            const modal = document.createElement('div');
+            modal.className = 'wa-modal active';
+            const modeIcon = mode === 'learning' ? '📚' : '⚔️';
+            const modeTitle = mode === 'learning' ? '学習モード' : 'クイズモード';
+            
+            modal.innerHTML = `
+                <div class="wa-modal-content">
+                    <h3 style="color: var(--take); margin-bottom: 1rem;">${modeIcon} ${modeTitle}開始</h3>
+                    <p style="margin-bottom: 1.5rem;">${message}</p>
+                    <div class="wa-loading">
+                        <div class="wa-loading-spinner"></div>
+                        <p>画面を遷移しています...</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
         // 待機時間タイマー
         function startWaitingTimer() {
             setInterval(() => {
@@ -765,6 +842,59 @@
             animation: none;
         }
 
+        /* モーダルとローディング */
+        .wa-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .wa-modal.active {
+            display: flex;
+        }
+
+        .wa-modal-content {
+            background: var(--washi);
+            border: 3px solid var(--enjhi);
+            border-radius: var(--border-radius-large);
+            padding: var(--spacing-xl);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: var(--shadow-strong);
+        }
+
+        .wa-loading {
+            margin-top: var(--spacing-lg);
+        }
+
+        .wa-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--ai);
+            border-top: 4px solid var(--enjhi);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--spacing-md) auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .wa-loading p {
+            color: var(--sumi);
+            font-style: italic;
+        }
+
         @media (max-width: 768px) {
             .wa-mode-cards-large {
                 grid-template-columns: 1fr;
@@ -799,6 +929,11 @@
             .wa-battle-info {
                 flex-direction: column;
                 align-items: center;
+            }
+
+            .wa-modal-content {
+                width: 95%;
+                padding: var(--spacing-lg);
             }
         }
     </style>

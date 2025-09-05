@@ -282,17 +282,36 @@
         
         // ルーム接続
         function connectToRoom() {
-            if (isConnecting || roomConnected) return;
-            
-            const roomId = document.getElementById('roomId').value.trim();
-            const playerName = document.getElementById('playerName').value.trim();
-            
-            if (!roomId || !playerName) {
-                showError('ルーム名とお名前を入力してください');
+            if (isConnecting || roomConnected) {
+                console.log('既に接続処理中またはルームに接続済みです');
                 return;
             }
             
+            const roomId = document.getElementById('roomId').value.trim();
+            const playerName = document.getElementById('playerName').value.trim();
+            const connectBtn = document.getElementById('connectBtn');
+            
+            // フォーム検証
+            if (!roomId || roomId.length < 4 || roomId.length > 20) {
+                showError('ルーム名は4-20文字で入力してください');
+                return;
+            }
+            
+            if (!playerName || playerName.length < 2 || playerName.length > 15) {
+                showError('お名前は2-15文字で入力してください');
+                return;
+            }
+            
+            // 接続開始
             isConnecting = true;
+            connectBtn.disabled = true;
+            
+            // ボタンテキストを更新
+            const connectText = document.getElementById('connectText');
+            const connectIcon = document.getElementById('connectIcon');
+            connectText.textContent = '接続中...';
+            connectIcon.textContent = '🔄';
+            
             showConnectionStatus();
             updateProgress(20, 'サーバーに接続中...');
             
@@ -323,8 +342,17 @@
             
             socket.on('connect_error', (error) => {
                 console.error('接続エラー:', error);
-                showError('サーバーに接続できませんでした。しばらく待ってから再試行してください。');
-                isConnecting = false;
+                let errorMessage = 'サーバーに接続できませんでした。';
+                
+                if (error.type === 'TransportError') {
+                    errorMessage += '通信エラーが発生しました。ネットワーク接続を確認してください。';
+                } else if (error.message) {
+                    errorMessage += `エラー: ${error.message}`;
+                } else {
+                    errorMessage += 'しばらく待ってから再試行してください。';
+                }
+                
+                showError(errorMessage);
             });
             
             socket.on('room_full', () => {
@@ -340,7 +368,7 @@
                     updateRoomStatus(data);
                     isConnecting = false;
                     roomConnected = true;
-                    updateProgress(100, '接続完了！');
+                    updateProgress(100, '準備完了！');
                 }, 1000);
             });
             
@@ -352,6 +380,30 @@
             socket.on('player_disconnected', (data) => {
                 showError(`${data.playerName}さんが切断されました。`);
                 resetConnection();
+            });
+            
+            socket.on('room_closed_by_owner', (data) => {
+                console.log('主催者によってルームが閉じられました:', data);
+                showError(`${data.message}\n主催者: ${data.ownerName} さんが新しいルーム "${data.newRoomId}" を作成しました。`);
+                resetConnection();
+            });
+            
+            // Guest用: Owner がモード選択画面に遷移した際の自動遷移処理
+            socket.on('owner_proceeded_to_mode_select', (data) => {
+                console.log(`Owner ${data.ownerName} がモード選択画面に遷移しました`, data);
+                
+                // Guestの場合のみ自動遷移
+                if (userRole === 'guest') {
+                    const roomId = document.getElementById('roomId').value;
+                    const playerName = document.getElementById('playerName').value;
+                    
+                    console.log('Guestとして自動的にモード選択画面に遷移します');
+                    
+                    // 短い遅延の後、モード選択画面へ遷移
+                    setTimeout(() => {
+                        window.location.href = `mode-select.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
+                    }, 1000);
+                }
             });
             
             socket.on('disconnect', () => {
@@ -371,7 +423,7 @@
             if (percent === 100) {
                 setTimeout(() => {
                     document.getElementById('statusIcon').textContent = '✅';
-                    document.getElementById('statusTitle').textContent = '接続完了';
+                    document.getElementById('statusTitle').textContent = '準備完了';
                 }, 500);
             }
         }
@@ -383,8 +435,11 @@
             const statusRoom = document.getElementById('statusRoom');
             
             connectionDot.style.backgroundColor = 'var(--take)';
-            connectionText.textContent = '接続完了';
+            connectionText.textContent = '準備完了';
             statusRoom.textContent = document.getElementById('roomId').value;
+            
+            // 接続完了後のボタン状態を更新
+            updateConnectionButton();
             
             if (userRole === 'owner') {
                 if (participants.length < 2) {
@@ -395,6 +450,64 @@
             } else {
                 showParticipants({ players: participants });
             }
+        }
+        
+        // 接続完了後のボタン状態を更新
+        function updateConnectionButton() {
+            const connectBtn = document.getElementById('connectBtn');
+            const connectText = document.getElementById('connectText');
+            const connectIcon = document.getElementById('connectIcon');
+            
+            // ボタンを有効化
+            connectBtn.disabled = false;
+            
+            if (userRole === 'owner') {
+                // Ownerの場合：ルーム作り直し
+                connectText.textContent = 'ルーム作り直し';
+                connectIcon.textContent = '🔄';
+                connectBtn.onclick = recreateRoom;
+            } else {
+                // Guestの場合：接続取り消し
+                connectText.textContent = '接続取り消し';
+                connectIcon.textContent = '❌';
+                connectBtn.onclick = cancelConnection;
+            }
+        }
+        
+        // Owner用：ルーム作り直し機能
+        function recreateRoom() {
+            console.log('ルーム作り直しを開始します');
+            
+            // 現在の接続をリセット
+            resetConnection();
+            
+            // フォームの値をチェック（入力内容は保持される）
+            const roomId = document.getElementById('roomId').value.trim();
+            const playerName = document.getElementById('playerName').value.trim();
+            
+            if (!roomId || !playerName) {
+                showError('ルーム名とお名前を入力してください');
+                return;
+            }
+            
+            // 短い遅延の後、新しいルームを作成
+            setTimeout(() => {
+                connectToRoom();
+            }, 100);
+        }
+        
+        // Guest用：接続取り消し機能
+        function cancelConnection() {
+            console.log('接続を取り消します');
+            
+            // サーバーにルーム離脱を通知
+            if (socket && socket.connected) {
+                const roomId = document.getElementById('roomId').value.trim();
+                socket.emit('leave_room', { roomId: roomId });
+            }
+            
+            // 接続をリセット
+            resetConnection();
         }
         
         function showWaitingForGuest() {
@@ -461,13 +574,34 @@
             const errorDisplay = document.getElementById('errorDisplay');
             const errorMessage = document.getElementById('errorMessage');
             const connectionStatus = document.getElementById('connectionStatus');
+            const connectBtn = document.getElementById('connectBtn');
             
             errorMessage.textContent = message;
             errorDisplay.style.display = 'block';
             connectionStatus.style.display = 'none';
             
-            // ボタンを再有効化
-            document.getElementById('connectBtn').disabled = false;
+            // 接続状態をリセット
+            isConnecting = false;
+            roomConnected = false;
+            
+            // フォーム検証を再実行してボタン状態を適切に設定
+            const roomId = document.getElementById('roomId').value.trim();
+            const playerName = document.getElementById('playerName').value.trim();
+            const isFormValid = roomId.length >= 4 && roomId.length <= 20 &&
+                               playerName.length >= 2 && playerName.length <= 15;
+            
+            connectBtn.disabled = !isFormValid;
+            
+            // ボタンテキストとアイコンをリセット
+            const connectText = document.getElementById('connectText');
+            const connectIcon = document.getElementById('connectIcon');
+            connectIcon.textContent = '🏮';
+            
+            if (userRole === 'owner') {
+                connectText.textContent = 'ルームを開設';
+            } else {
+                connectText.textContent = 'ルームに参加';
+            }
         }
         
         function retryConnection() {
@@ -487,13 +621,27 @@
             roomConnected = false;
             
             const connectionStatus = document.getElementById('connectionStatus');
+            const errorDisplay = document.getElementById('errorDisplay');
+            const connectBtn = document.getElementById('connectBtn');
+            
             connectionStatus.style.display = 'none';
+            errorDisplay.style.display = 'none';
             
             // 参加者表示をリセット
             const participants = document.getElementById('participants');
             const proceedBtnGroup = document.getElementById('proceedBtnGroup');
+            const waitingGuest = document.getElementById('waitingGuest');
             participants.style.display = 'none';
             proceedBtnGroup.style.display = 'none';
+            waitingGuest.style.display = 'none';
+            
+            // プログレスバーをリセット
+            const progressBar = document.getElementById('progressBar');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusTitle = document.getElementById('statusTitle');
+            progressBar.style.width = '0%';
+            statusIcon.textContent = '🔄';
+            statusTitle.textContent = '接続中...';
             
             // ステータス更新
             const connectionDot = document.getElementById('connectionDot');
@@ -502,11 +650,37 @@
             connectionDot.style.backgroundColor = 'var(--enjhi)';
             connectionText.textContent = '未接続';
             statusRoom.textContent = '未設定';
+            
+            // フォーム検証を再実行してボタン状態を適切に設定
+            const roomId = document.getElementById('roomId').value.trim();
+            const playerName = document.getElementById('playerName').value.trim();
+            const isFormValid = roomId.length >= 4 && roomId.length <= 20 &&
+                               playerName.length >= 2 && playerName.length <= 15;
+            
+            connectBtn.disabled = !isFormValid;
+            
+            // ボタンテキストとアイコンをリセット
+            const connectText = document.getElementById('connectText');
+            const connectIcon = document.getElementById('connectIcon');
+            connectIcon.textContent = '🏮';
+            
+            if (userRole === 'owner') {
+                connectText.textContent = 'ルームを開設';
+            } else {
+                connectText.textContent = 'ルームに参加';
+            }
         }
         
         function proceedToModeSelect() {
             const roomId = document.getElementById('roomId').value;
             const playerName = document.getElementById('playerName').value;
+            
+            // Ownerの場合、サーバーにモード選択遷移を通知
+            if (userRole === 'owner' && socket && socket.connected) {
+                socket.emit('proceed_to_mode_select', {
+                    roomId: roomId
+                });
+            }
             
             // モード選択画面へ遷移
             window.location.href = `mode-select.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;

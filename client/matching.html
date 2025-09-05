@@ -168,7 +168,7 @@
             socket.on('connect', () => {
                 console.log('サーバーに接続しました');
                 document.getElementById('connectionStatus').innerHTML = 
-                    '<span class="wa-status-dot success"></span><span class="wa-status-text">接続完了</span>';
+                    '<span class="wa-status-dot success"></span><span class="wa-status-text">準備完了</span>';
                 
                 // ルームに参加
                 socket.emit('join_room', { roomId, playerName, role: userRole, mode: 'quiz' });

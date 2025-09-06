@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>物語 - 学習の間</title>
+  <link rel="stylesheet" href="css/taisho.css" />
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/socket.js"></script>
+</head>
+<body>
+  <div class="seasonal-decoration" id="seasonalDecoration"></div>
+
+  <main class="washi-container wa-fade-in">
+    <header class="wa-header">
+      <h1 class="wa-title" id="pageTitle">学習の間 - 物語</h1>
+      <p class="wa-subtitle" id="pageSubtitle">読み込み中…</p>
+      <div class="wa-divider"></div>
+    </header>
+
+    <!-- 役割表示とステータス -->
+    <div class="wa-role-status" style="margin-bottom: 2rem;">
+      <div class="wa-card">
+        <div class="wa-card-content" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span class="wa-role-badge" id="roleDisplay">未設定</span>
+            <span class="wa-player-name" id="playerNameDisplay">未設定</span>
+          </div>
+          <div>
+            <span class="wa-room-info">🏛️ <span id="roomIdDisplay">未設定</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem; display:flex; gap:.5rem; align-items:center; justify-content:center;">
+      <a class="wa-btn wa-btn-outline" id="backLink" href="learning.html">← 目次へ戻る</a>
+    </div>
+
+    <section class="wa-learning-main">
+      <div class="wa-content-section active">
+        <div class="wa-story-content">
+          <div class="wa-story-header">
+            <h2 class="wa-story-title" id="storyTitle">読込中…</h2>
+            <div class="wa-story-subtitle" id="storySubtitle"></div>
+            <div class="wa-divider"></div>
+          </div>
+
+          <div class="wa-story-layout">
+            <div class="wa-story-main">
+              <div class="wa-story-body">
+                <div class="wa-story-scroll" id="storyScroll">
+                  <div class="wa-story-section">
+                    <div class="wa-typewriter-text" id="storyBody">お待ちください…</div>
+                  </div>
+                </div>
+              </div>
+              <!-- 章ナビゲーション -->
+              <div class="wa-btn-group" id="chapterNav" style="margin-top: var(--spacing-lg);">
+                <button class="wa-btn wa-btn-outline" id="prevChapterBtn">◀ 前の章へ</button>
+                <button class="wa-btn wa-btn-outline" id="nextChapterBtn">次の章へ ▶</button>
+              </div>
+            </div>
+
+            <div class="wa-story-sidebar">
+              <div class="wa-key-concepts">
+                <h3 class="wa-concepts-title">🔑 重要概念</h3>
+                <div class="wa-concept-list" id="conceptList"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- アクションボタン（学習ページと統一） -->
+  <div class="wa-btn-group" style="margin-top: 2rem;">
+    <button class="wa-btn wa-btn-primary" onclick="goToQuiz()">
+      <span>⚔️</span>
+      <span>雅なるクイズ対戦へ</span>
+    </button>
+    <button class="wa-btn wa-btn-secondary" onclick="goHome()">
+      <span>🏠</span>
+      <span>学習の間を出る</span>
+    </button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    let category = params.get('category') || 'numbers';
+    let chapterId = parseInt(params.get('chapter') || '1', 10);
+    const roomId = params.get('roomId');
+    const playerName = params.get('playerName');
+    const userRole = params.get('role') || 'guest';
+
+    // 戻るリンクにカテゴリ情報を付与（学習ページで対象カテゴリを初期表示できるように）
+    const backLink = document.getElementById('backLink');
+    const backParams = new URLSearchParams({ category });
+    if (roomId) backParams.set('roomId', roomId);
+    if (playerName) backParams.set('playerName', playerName);
+    if (userRole) backParams.set('role', userRole);
+    backLink.href = `learning.html?${backParams.toString()}`;
+
+    // カテゴリ→JSONパスのマップ
+    const STORY_PATHS = {
+      numbers: '/data/stories/01_numbers.json',
+      hardware: '/data/stories/02_hardware.json',
+      algorithms: '/data/stories/03_algorithms.json',
+      web: '/data/stories/04_web.json',
+      network: '/data/stories/05_network.json',
+      security: '/data/stories/06_security.json'
+    };
+
+    function escapeHTML(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    let CURRENT_JSON = null;
+    let CURRENT_CHAPTERS = [];
+    let CURRENT_INDEX = -1;
+
+    function typewriterEffect(element, onDone) {
+      element.classList.add('typed');
+      const text = element.innerHTML;
+      element.innerHTML = '';
+      element.style.visibility = 'visible';
+      let index = 0;
+      const timer = setInterval(() => {
+        element.innerHTML = text.substring(0, index);
+        index++;
+        if (index > text.length) {
+          clearInterval(timer);
+          if (typeof onDone === 'function') onDone();
+        }
+      }, 30);
+    }
+
+    function updateUrlQuery() {
+      const params = new URLSearchParams(window.location.search);
+      params.set('category', category);
+      params.set('chapter', String(chapterId));
+      if (roomId) params.set('roomId', roomId);
+      if (playerName) params.set('playerName', playerName);
+      if (userRole) params.set('role', userRole);
+      history.replaceState({}, '', `${location.pathname}?${params.toString()}`);
+    }
+
+    function updateNavButtons() {
+      const prevBtn = document.getElementById('prevChapterBtn');
+      const nextBtn = document.getElementById('nextChapterBtn');
+      if (!prevBtn || !nextBtn) return;
+      prevBtn.disabled = CURRENT_INDEX <= 0;
+      nextBtn.disabled = CURRENT_INDEX < 0 || CURRENT_INDEX >= CURRENT_CHAPTERS.length - 1;
+    }
+
+    function goChapter(delta) {
+      if (!Array.isArray(CURRENT_CHAPTERS) || CURRENT_INDEX < 0) return;
+      const nextIndex = CURRENT_INDEX + delta;
+      if (nextIndex < 0 || nextIndex >= CURRENT_CHAPTERS.length) return;
+      const nextId = CURRENT_CHAPTERS[nextIndex]?.id;
+      if (nextId != null) {
+        loadStory(category, nextId);
+      }
+    }
+
+    async function loadStory(nextCategory = null, nextChapterId = null) {
+      if (nextCategory) category = nextCategory;
+      if (nextChapterId != null) chapterId = parseInt(nextChapterId, 10);
+      const path = STORY_PATHS[category];
+      if (!path) {
+        document.getElementById('pageSubtitle').textContent = 'カテゴリが見つかりません';
+        return;
+      }
+      try {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error('not found');
+        CURRENT_JSON = await res.json();
+        CURRENT_CHAPTERS = CURRENT_JSON.chapters || [];
+        const ch = CURRENT_CHAPTERS.find(c => String(c.id) === String(chapterId)) || CURRENT_CHAPTERS[0];
+        if (!ch) {
+          document.getElementById('pageSubtitle').textContent = '章データが見つかりません';
+          return;
+        }
+        CURRENT_INDEX = CURRENT_CHAPTERS.findIndex(c => String(c.id) === String(ch.id));
+
+        // タイトル・サブタイトル
+        const catLabelMap = {
+          numbers: '🔢 数値とデータの基礎',
+          hardware: '💾 ハードウェア',
+          algorithms: '🔄 アルゴリズム',
+          web: '🌐 Web技術',
+          network: '🔗 ネットワーク',
+          security: '🔐 セキュリティ'
+        };
+        document.getElementById('pageSubtitle').textContent = catLabelMap[category] || '';
+        document.getElementById('storyTitle').textContent = `${catLabelMap[category] || ''}`;
+        document.getElementById('storySubtitle').textContent = `第${ch.id}章：${ch.title}`;
+
+        // 本文
+        const storyEl = document.getElementById('storyBody');
+        const lines = ch.story || [];
+        const html = lines.map(p => p ? escapeHTML(p) : '<br>').map(l => /<br>/.test(l) ? l : l + '<br>').join('');
+        storyEl.innerHTML = html;
+        storyEl.parentElement?.parentElement?.scrollTo?.(0, 0);
+        const kc = document.querySelector('.wa-key-concepts');
+        if (kc) kc.classList.remove('visible');
+        typewriterEffect(storyEl, () => {
+          const box = document.querySelector('.wa-key-concepts');
+          if (box) box.classList.add('visible');
+        });
+
+        // 短歌
+        if (ch.poem) {
+          const poemHtml = `
+            <div class="wa-poem-section">
+              <div class="wa-poem-title">📜 ${escapeHTML(ch.poem.title || '詩')}</div>
+              <div class="wa-poem-text">${(ch.poem.lines || []).map(x => escapeHTML(x)).join('<br>')}</div>
+            </div>`;
+          storyEl.insertAdjacentHTML('beforeend', poemHtml);
+        }
+
+        // 重要概念
+        const list = document.getElementById('conceptList');
+        const keyPoints = ch.keyPoints || [];
+        list.innerHTML = keyPoints.map(kp => `
+          <div class="wa-concept-item"><strong>${escapeHTML(kp.term || '')}</strong>: ${escapeHTML(kp.definition || '')}</div>
+        `).join('');
+
+        // ナビゲーション状態とURL反映
+        updateNavButtons();
+        updateUrlQuery();
+
+        // Ownerの場合は物語選択の同期を送信
+        try {
+          if (userRole === 'owner' && roomId) {
+            const sock = window.__learningSocketStory || (window.__learningSocketStory = io());
+            sock.emit('learning_story_change', { roomId, category, chapterId });
+          }
+        } catch (e) { /* no-op */ }
+
+      } catch (e) {
+        document.getElementById('pageSubtitle').textContent = 'データの読み込みに失敗しました';
+        console.error(e);
+      }
+    }
+
+    // 四季装飾（learning.htmlの生成ロジックを移植）
+    const seasons = ['spring', 'summer', 'autumn', 'winter'];
+    let currentSeasonIndex = 0;
+    function changeSeason() {
+      const seasonElement = document.getElementById('seasonalDecoration');
+      currentSeasonIndex = (currentSeasonIndex + 1) % seasons.length;
+      const season = seasons[currentSeasonIndex];
+      seasonElement.className = `seasonal-decoration season-${season}`;
+      generateSeasonalElements(season);
+    }
+    function generateSeasonalElements(season) {
+      const container = document.getElementById('seasonalDecoration');
+      if (!container) return;
+      container.innerHTML = '';
+      const elementCount = 6;
+      for (let i = 0; i < elementCount; i++) {
+        const element = document.createElement('div');
+        switch (season) {
+          case 'spring':
+            element.className = 'sakura-petal';
+            element.style.left = Math.random() * 100 + '%';
+            element.style.animationDelay = Math.random() * 8 + 's';
+            element.style.animationDuration = (6 + Math.random() * 4) + 's';
+            break;
+          case 'summer':
+            element.className = 'summer-leaf';
+            element.style.cssText = `
+              position: absolute;
+              width: 8px; height: 8px;
+              background: var(--tsuyu);
+              border-radius: 50% 0 50% 0;
+              left: ${Math.random() * 100}%;
+              animation: summerSway ${4 + Math.random() * 3}s ease-in-out infinite;
+              animation-delay: ${Math.random() * 4}s; opacity: .3;`;
+            break;
+          case 'autumn':
+            element.className = 'momiji-leaf';
+            element.style.left = Math.random() * 100 + '%';
+            element.style.animationDelay = Math.random() * 10 + 's';
+            element.style.animationDuration = (8 + Math.random() * 4) + 's';
+            break;
+          case 'winter':
+            element.className = 'snow-flake';
+            element.innerHTML = '❄';
+            element.style.cssText = `
+              position: absolute; color: var(--yuki);
+              font-size: ${6 + Math.random() * 6}px; left: ${Math.random() * 100}%;
+              animation: snowFall ${6 + Math.random() * 6}s linear infinite;
+              animation-delay: ${Math.random() * 6}s; opacity: .6;`;
+            break;
+        }
+        container.appendChild(element);
+      }
+    }
+
+    // Quiz/ホーム遷移（learning.html と統一）
+    function goToQuiz() {
+      if (roomId && playerName) {
+        window.location.href = `matching.html?roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&role=${encodeURIComponent(userRole)}`;
+      } else {
+        alert('クイズに挑戦するには、ルーム情報が必要です。');
+        window.location.href = 'index.html';
+      }
+    }
+    function goHome() {
+      try {
+        if (roomId) {
+          const sock = window.__learningSocketStory || (window.__learningSocketStory = io());
+          sock.emit('leave_room', { roomId });
+        }
+      } catch (e) {}
+      window.location.href = 'index.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 役割・表示名・ルームID
+      if (roomId) document.getElementById('roomIdDisplay').textContent = roomId;
+      if (playerName) document.getElementById('playerNameDisplay').textContent = playerName;
+      const roleDisplay = document.getElementById('roleDisplay');
+      if (userRole === 'owner') {
+        roleDisplay.textContent = '👑 主催者';
+        roleDisplay.className = 'wa-role-badge owner';
+      } else {
+        roleDisplay.textContent = '🎋 参加者';
+        roleDisplay.className = 'wa-role-badge guest';
+      }
+
+      // Socket接続・ルーム参加
+      try {
+        const sock = window.__learningSocketStory || (window.__learningSocketStory = io());
+        if (roomId) {
+          sock.emit('join_room', { roomId, playerName, role: userRole, mode: 'learning' });
+        }
+        // 物語変更の同期を受信
+        sock.on('learning_story_changed', ({ category: cat, chapterId: chId }) => {
+          if (cat) category = cat;
+          if (chId != null) chapterId = chId;
+          loadStory(category, chapterId);
+        });
+        // スナップショット受信時（Guest初期同期）
+        sock.on('learning_story_snapshot', ({ currentCategory, selectedStory }) => {
+          if (!currentCategory || currentCategory === 'menu') return; // 物語未選択
+          const chId = selectedStory?.[currentCategory];
+          if (currentCategory && chId) {
+            category = currentCategory; chapterId = chId;
+            loadStory(category, chapterId);
+          }
+        });
+        // スクロール同期（Guest反映）
+        sock.on('learning_scroll_sync', ({ category: cat, scrollTop }) => {
+          if (cat === category) {
+            const el = document.getElementById('storyScroll');
+            if (el) el.scrollTop = scrollTop;
+          }
+        });
+      } catch (e) { console.warn('Socket setup failed', e); }
+
+      // スクロール同期（Owner送信）
+      const scrollElement = document.getElementById('storyScroll');
+      if (scrollElement && userRole === 'owner' && roomId) {
+        scrollElement.addEventListener('scroll', () => {
+          try {
+            const sock = window.__learningSocketStory || (window.__learningSocketStory = io());
+            sock.emit('learning_scroll_change', { roomId, category, scrollTop: scrollElement.scrollTop });
+          } catch (e) {}
+        });
+      }
+
+      // 初期表示
+      loadStory(category, chapterId);
+      generateSeasonalElements('spring');
+      setInterval(() => changeSeason(), 45000);
+
+      // 章ナビゲーション
+      const prevBtn = document.getElementById('prevChapterBtn');
+      const nextBtn = document.getElementById('nextChapterBtn');
+      if (userRole !== 'owner') {
+        if (prevBtn) { prevBtn.disabled = true; prevBtn.title = '主催者のみ操作できます'; }
+        if (nextBtn) { nextBtn.disabled = true; nextBtn.title = '主催者のみ操作できます'; }
+      } else {
+        if (prevBtn) prevBtn.addEventListener('click', () => goChapter(-1));
+        if (nextBtn) nextBtn.addEventListener('click', () => goChapter(1));
+      }
+    });
+  </script>
+</body>
+</html>

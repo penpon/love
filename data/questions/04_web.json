@@ -1,0 +1,123 @@
+{
+  "category": "Web基盤技術",
+  "categoryId": "web",
+  "questions": [
+    {
+      "id": 1,
+      "story": "港の商館にて、紬は見本帳の注文を電信で受けた。『手紙の往復がWebの基本だよ』と凪。",
+      "question": "HTTPの基本モデルとして正しいものはどれですか？",
+      "options": ["クライアント-サーバ", "ピアツーピアのみ", "ブロードキャストのみ", "メールサーバ-メールクライアントのみ"],
+      "correctAnswer": 0,
+      "explanation": "HTTPはクライアント（ブラウザなど）がサーバにリクエストを送り、サーバがレスポンスを返すモデルです。",
+      "difficulty": "初級",
+      "tags": ["HTTP", "クライアントサーバ"],
+      "relatedChapter": 1
+    },
+    {
+      "id": 2,
+      "story": "凪の電文には『GETで見本を閲覧、POSTで注文記録』と簡潔に書かれていた。",
+      "question": "HTTPメソッドと用途の組み合わせとして最も適切なのはどれですか？",
+      "options": ["GET=取得、POST=作成・送信", "GET=削除、POST=取得", "GET=更新、POST=削除", "GET=作成、POST=取得"],
+      "correctAnswer": 0,
+      "explanation": "GETはリソースの取得、POSTは新規作成や送信で使われるのが基本です。",
+      "difficulty": "初級",
+      "tags": ["HTTP", "GET", "POST"],
+      "relatedChapter": 1
+    },
+    {
+      "id": 3,
+      "story": "『文面の先頭に宛先と印（ヘッダ）を付けると届きやすい』と凪。",
+      "question": "HTTPヘッダの説明として正しいものはどれですか？",
+      "options": ["リクエストやレスポンスに付随する追加情報", "HTML本文そのもの", "画像バイナリのこと", "クッキーのみを指す"],
+      "correctAnswer": 0,
+      "explanation": "ヘッダはリクエスト/レスポンスに付加されるメタ情報です。",
+      "difficulty": "初級",
+      "tags": ["HTTPヘッダ", "メタ情報"],
+      "relatedChapter": 1
+    },
+    {
+      "id": 4,
+      "story": "茶屋で紬は『HTMLが骨組、CSSが衣、JSが所作』と教わった。",
+      "question": "Webフロントの役割として正しい対応はどれですか？",
+      "options": ["HTML=構造, CSS=見た目, JS=動き", "HTML=動き, CSS=構造, JS=見た目", "HTML=見た目, CSS=動き, JS=構造", "すべて同じ役割"],
+      "correctAnswer": 0,
+      "explanation": "HTMLが構造、CSSがスタイル、JavaScriptが振る舞い（動作）を担います。",
+      "difficulty": "初級",
+      "tags": ["HTML", "CSS", "JavaScript"],
+      "relatedChapter": 1
+    },
+    {
+      "id": 5,
+      "story": "『印持参の常連さんには世話も早い』と女将。『キャッシュ』という仕組みがあるらしい。",
+      "question": "ブラウザキャッシュに関する説明として正しいものはどれですか？",
+      "options": ["同じリソースを再利用し、通信を減らす", "常に最新のファイルを再取得する仕組み", "サーバ側のデータベースを指す", "セキュリティ強化のためだけの仕組み"],
+      "correctAnswer": 0,
+      "explanation": "キャッシュはリソースを保存・再利用して通信量や待ち時間を減らします。",
+      "difficulty": "初級",
+      "tags": ["キャッシュ", "パフォーマンス"],
+      "relatedChapter": 2
+    },
+    {
+      "id": 6,
+      "story": "紬は注文伝票に『合図（ステータス）』を付けて仕分けを速めた。",
+      "question": "HTTPステータスコード200番台の意味として最も近いのは？",
+      "options": ["成功", "リダイレクト", "クライアントエラー", "サーバエラー"],
+      "correctAnswer": 0,
+      "explanation": "200番台は成功（OK、Createdなど）を表します。",
+      "difficulty": "初級",
+      "tags": ["HTTPステータス"],
+      "relatedChapter": 1
+    },
+    {
+      "id": 7,
+      "story": "『旗（Cookie）を渡せば、次も常連と分かる』と凪。",
+      "question": "Cookieの用途として正しいものはどれですか？",
+      "options": ["クライアントに小さな状態を保存して継続的に識別する", "画像を圧縮する", "暗号化のみを行う", "HTMLを生成する"],
+      "correctAnswer": 0,
+      "explanation": "Cookieは小さな状態をブラウザに保存し、次回以降の識別や状態維持に使います。",
+      "difficulty": "初級",
+      "tags": ["Cookie", "状態管理"],
+      "relatedChapter": 2
+    },
+    {
+      "id": 8,
+      "story": "紬は『見本帳API』という言葉を聞く。『統一の作法（REST）で呼び出すと分かりやすい』と凪。",
+      "question": "RESTで一般的に『リソース』の取得に対応づけられるHTTPメソッドは？",
+      "options": ["GET", "PUT", "PATCH", "DELETE"],
+      "correctAnswer": 0,
+      "explanation": "RESTではGETが取得、POSTが作成、PUT/PATCHが更新、DELETEが削除に対応するのが一般的です。",
+      "difficulty": "中級",
+      "tags": ["REST", "HTTPメソッド"],
+      "relatedChapter": 3
+    },
+    {
+      "id": 9,
+      "story": "『同じ頁でも、部分を差し替えて素早く見せるやり方（SPA）もあるらしい』と女将。",
+      "question": "SPAの特徴として最も適切な説明はどれですか？",
+      "options": ["初回に大きなリソースを読み、以降は部分更新で高速な体験を提供する", "毎回フルリロードする", "サーバサイドでのみ描画する", "Javaだけで書かれる"],
+      "correctAnswer": 0,
+      "explanation": "SPAは初回ロード後、クライアント側でルーティング/差し替えを行い体験を高速化します。",
+      "difficulty": "中級",
+      "tags": ["SPA", "フロントエンド"],
+      "relatedChapter": 3
+    },
+    {
+      "id": 10,
+      "story": "『見本は改まれば番号（ETag）で見分け、変わらなければ運ばぬが吉』と凪。",
+      "question": "HTTPの条件付きリクエストで内容が変わっていない場合に返る代表的なステータスは？",
+      "options": ["304 Not Modified", "201 Created", "204 No Content", "206 Partial Content"],
+      "correctAnswer": 0,
+      "explanation": "ETagやIf-None-Matchなどによる条件付きGETで変更なしの場合、304が返ります。",
+      "difficulty": "中級",
+      "tags": ["HTTP", "ETag", "304"],
+      "relatedChapter": 3
+    }
+  ],
+  "metadata": {
+    "totalQuestions": 10,
+    "difficulty": { "初級": 7, "中級": 3, "上級": 0 },
+    "estimatedTime": "15分",
+    "passingScore": 70,
+    "tags": ["HTTP", "HTML/CSS/JS", "Cookie", "キャッシュ", "REST", "SPA", "ステータス"]
+  }
+}

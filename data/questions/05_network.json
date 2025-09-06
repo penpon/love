@@ -1,0 +1,123 @@
+{
+  "category": "ネットワーク",
+  "categoryId": "network",
+  "questions": [
+    {
+      "id": 1,
+      "story": "電信局で紬は『宛先と道順が分かるから手紙は届く』と教わる。ネットでも同じだという。",
+      "question": "インターネットで端末を一意に識別するために主に用いられるアドレスはどれですか？",
+      "options": ["IPアドレス", "MACアドレスのみ", "URLだけ", "ホスト名だけ"],
+      "correctAnswer": 0,
+      "explanation": "通信経路の中でルーティングに使われるのはIPアドレスです（MACは同一リンク内の転送で利用）。",
+      "difficulty": "初級",
+      "tags": ["IP", "識別子"],
+      "relatedChapter": 1
+    },
+    {
+      "id": 2,
+      "story": "凪は『下駄箱の段（レイヤ）ごとに役目がある』と重ねて説明した。",
+      "question": "TCP/IPの4階層モデルに含まれないものはどれですか？",
+      "options": ["アプリケーション層", "トランスポート層", "インターネット層", "プレゼンテーション層"],
+      "correctAnswer": 3,
+      "explanation": "TCP/IPでは一般にアプリ/トランスポート/インターネット/リンク（ネットワークインタフェース）層で捉えます。",
+      "difficulty": "初級",
+      "tags": ["TCP/IP", "レイヤ"],
+      "relatedChapter": 1
+    },
+    {
+      "id": 3,
+      "story": "大事な文は読み損ねないよう復唱して確認する。通信でも似た作法があるそうだ。",
+      "question": "TCPの特徴として最も適切なのはどれですか？",
+      "options": ["コネクション型で信頼性が高い", "コネクションレスで低遅延", "ブロードキャスト専用", "暗号化を必ず行う"],
+      "correctAnswer": 0,
+      "explanation": "TCPはコネクション型で順序制御・再送制御などにより信頼性を提供します（暗号はTLS等を併用）。",
+      "difficulty": "初級",
+      "tags": ["TCP", "信頼性"],
+      "relatedChapter": 2
+    },
+    {
+      "id": 4,
+      "story": "急ぎの口伝は細かい確認をせず走ることもある。",
+      "question": "UDPの特徴として正しいものはどれですか？",
+      "options": ["コネクションレスで軽量", "必ず到達し順序も保証", "暗号化が標準で必須", "フロー制御を行う"],
+      "correctAnswer": 0,
+      "explanation": "UDPはコネクションレスで軽量ですが、到達や順序、再送の保証は行いません。",
+      "difficulty": "初級",
+      "tags": ["UDP", "軽量"],
+      "relatedChapter": 2
+    },
+    {
+      "id": 5,
+      "story": "紬は『人の名』から住所を引く帳面を作った。ネットでも名から番号に引き当てる仕組みがある。",
+      "question": "人に分かりやすい名前をIPアドレスへ解決する仕組みは？",
+      "options": ["DNS", "NTP", "ARP", "ICMP"],
+      "correctAnswer": 0,
+      "explanation": "DNSはドメイン名をIPアドレスに解決します。ARPは同一ネットワーク内でIPからMACを得る仕組みです。",
+      "difficulty": "初級",
+      "tags": ["DNS", "名前解決"],
+      "relatedChapter": 3
+    },
+    {
+      "id": 6,
+      "story": "道幅が狭いと荷馬車は詰まる。通信でも通れる量に限りがある。",
+      "question": "帯域幅（bandwidth）に関する説明として正しいものはどれですか？",
+      "options": ["単位時間あたりに送れる最大データ量", "往復時間の指標", "パケット損失率", "暗号の強度"],
+      "correctAnswer": 0,
+      "explanation": "帯域幅は一定時間に転送できる理論上の最大量を表します（遅延はlatency）。",
+      "difficulty": "初級",
+      "tags": ["帯域", "スループット"],
+      "relatedChapter": 4
+    },
+    {
+      "id": 7,
+      "story": "封筒は必ず最短の道を行くとは限らない。届けばよいのだと郵便係は言う。",
+      "question": "IPネットワークで、パケットを次の経路へ渡す役割の装置は？",
+      "options": ["ルータ", "スイッチ(レイヤ2)", "ハブ", "リピータ"],
+      "correctAnswer": 0,
+      "explanation": "ルータはIP層で転送（ルーティング）を行います。スイッチは主にL2でMAC転送。",
+      "difficulty": "初級",
+      "tags": ["ルータ", "ルーティング"],
+      "relatedChapter": 4
+    },
+    {
+      "id": 8,
+      "story": "見知らぬ客が直接裏口に入るのは危ない。中継の番所を通すと落ち着く。",
+      "question": "NATの主な役割として適切なのはどれですか？",
+      "options": ["プライベートIPとグローバルIPの変換", "DNSの記録を暗号化", "時間同期を提供", "無線通信の速度向上"],
+      "correctAnswer": 0,
+      "explanation": "NATは内部のプライベートIPを外部のグローバルIPに変換し、アドレス節約や簡易的な秘匿に寄与します。",
+      "difficulty": "中級",
+      "tags": ["NAT", "アドレス変換"],
+      "relatedChapter": 5
+    },
+    {
+      "id": 9,
+      "story": "紬は手紙に印（番号）を振り、順番が乱れても並べ直せるようにした。",
+      "question": "IPヘッダのTTL(Time To Live)の主目的として正しいものはどれですか？",
+      "options": ["ループを防ぐために寿命を設定する", "暗号強度を上げる", "帯域を拡張する", "遅延を計測する"],
+      "correctAnswer": 0,
+      "explanation": "TTLはパケットが経由できる最大ホップ数を制限し、ループで無限に回り続けることを防ぎます。",
+      "difficulty": "中級",
+      "tags": ["IP", "TTL"],
+      "relatedChapter": 4
+    },
+    {
+      "id": 10,
+      "story": "港の見取り図が大きすぎると持ち運びに困る。小さく分けて渡すことにした。",
+      "question": "ネットワークにおけるMTUの説明として正しいものはどれですか？",
+      "options": ["一度に送信できるフレーム/パケットの最大長", "一度に確立できる接続の最大数", "ユーザ同時数の上限", "暗号鍵の長さ"],
+      "correctAnswer": 0,
+      "explanation": "MTU(Maximum Transmission Unit)は1回の転送で扱える最大サイズです。大きいデータは分割されます。",
+      "difficulty": "中級",
+      "tags": ["MTU", "フラグメンテーション"],
+      "relatedChapter": 5
+    }
+  ],
+  "metadata": {
+    "totalQuestions": 10,
+    "difficulty": { "初級": 7, "中級": 3, "上級": 0 },
+    "estimatedTime": "15分",
+    "passingScore": 70,
+    "tags": ["TCP/IP", "IP", "DNS", "TCP", "UDP", "NAT", "ルーティング", "帯域", "MTU"]
+  }
+}

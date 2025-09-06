@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/taisho.css">
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/socket.js"></script>
+    <script src="js/toast.js"></script>
 </head>
 <body>
     <!-- 四季の装飾要素 -->
@@ -118,6 +119,90 @@
             </div>
 
             <script>
+                // ルーム/役割情報（URLから取得）
+                const __params = new URLSearchParams(window.location.search);
+                const roomId = __params.get('roomId') || '';
+                const playerName = __params.get('playerName') || '';
+                const userRole = __params.get('role') || 'guest';
+                const initialCategoryParam = __params.get('category') || 'numbers';
+                // 役割・ルーム表示の更新とGuest同期パネル
+                document.addEventListener('DOMContentLoaded', () => {
+                    const rid = document.getElementById('roomIdDisplay');
+                    const pname = document.getElementById('playerNameDisplay');
+                    const rbadge = document.getElementById('roleDisplay');
+                    if (rid && roomId) rid.textContent = roomId;
+                    if (pname && playerName) pname.textContent = playerName;
+                    if (rbadge) {
+                        if (userRole === 'owner') {
+                            rbadge.textContent = '👑 主催者';
+                            rbadge.className = 'wa-role-badge owner';
+                            const panel = document.getElementById('guestSyncPanel');
+                            if (panel) panel.style.display = 'none';
+                        } else {
+                            rbadge.textContent = '🎋 参加者';
+                            rbadge.className = 'wa-role-badge guest';
+                            const panel = document.getElementById('guestSyncPanel');
+                            if (panel) panel.style.display = 'block';
+                        }
+                    }
+                });
+
+                // 季節装飾（末尾スクリプト削除に伴いここで管理）
+                const seasons = ['spring', 'summer', 'autumn', 'winter'];
+                let currentSeasonIndex = 0;
+                function changeSeason() {
+                    const seasonElement = document.getElementById('seasonalDecoration');
+                    if (!seasonElement) return;
+                    currentSeasonIndex = (currentSeasonIndex + 1) % seasons.length;
+                    const season = seasons[currentSeasonIndex];
+                    seasonElement.className = `seasonal-decoration season-${season}`;
+                    generateSeasonalElements(season);
+                }
+                function generateSeasonalElements(season = 'spring') {
+                    const container = document.getElementById('seasonalDecoration');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    const elementCount = 6;
+                    for (let i = 0; i < elementCount; i++) {
+                        const element = document.createElement('div');
+                        switch (season) {
+                            case 'spring':
+                                element.className = 'sakura-petal';
+                                element.style.left = Math.random() * 100 + '%';
+                                element.style.animationDelay = Math.random() * 8 + 's';
+                                element.style.animationDuration = (6 + Math.random() * 4) + 's';
+                                break;
+                            case 'summer':
+                                element.className = 'summer-leaf';
+                                element.style.cssText = `
+                                    position: absolute; width: 8px; height: 8px; background: var(--tsuyu);
+                                    border-radius: 50% 0 50% 0; left: ${Math.random() * 100}%;
+                                    animation: summerSway ${4 + Math.random() * 3}s ease-in-out infinite;
+                                    animation-delay: ${Math.random() * 4}s; opacity: 0.3;`;
+                                break;
+                            case 'autumn':
+                                element.className = 'momiji-leaf';
+                                element.style.left = Math.random() * 100 + '%';
+                                element.style.animationDelay = Math.random() * 10 + 's';
+                                element.style.animationDuration = (8 + Math.random() * 4) + 's';
+                                break;
+                            case 'winter':
+                                element.className = 'snow-flake';
+                                element.innerHTML = '❄';
+                                element.style.cssText = `
+                                    position: absolute; color: var(--yuki);
+                                    font-size: ${6 + Math.random() * 6}px; left: ${Math.random() * 100}%;
+                                    animation: snowFall ${6 + Math.random() * 6}s linear infinite;
+                                    animation-delay: ${Math.random() * 6}s; opacity: 0.6;`;
+                                break;
+                        }
+                        container.appendChild(element);
+                    }
+                }
+                document.addEventListener('DOMContentLoaded', () => {
+                    generateSeasonalElements('spring');
+                    setInterval(() => changeSeason(), 45000);
+                });
                 // タイムライン表示用のラベル（フォールバック）
                 const TL_DATA_FALLBACK = {
                     hardware: ['機械式計算機の恋','真空管の灯り','トランジスタの鼓動','メモリの記憶','ストレージの約束','CPUの三拍子','パイプラインの舞','キャッシュの囁き','命令セットの詩','クロックと愛'],
@@ -380,23 +465,43 @@
                         if (typeof roomId !== 'undefined' && roomId) params.set('roomId', roomId);
                         if (typeof playerName !== 'undefined' && playerName) params.set('playerName', playerName);
                         if (typeof userRole !== 'undefined' && userRole) params.set('role', userRole);
+                        // Ownerの場合は先に同期イベントを送出（Guestの追従遅延を最小化）
+                        if (userRole === 'owner' && roomId) {
+                            try {
+                                const sock = window.__learningSocket || (window.__learningSocket = io());
+                                sock.emit('learning_story_change', { roomId, category: cat, chapterId: ep });
+                            } catch (e) {}
+                        }
+                        if (typeof showSakuraToast === 'function') {
+                            showSakuraToast(`「第${ep}話」へ移動します…`, 900, '物語へ移動', '📖');
+                        }
                     } catch (e) { /* no-op */ }
-                    window.location.href = `learning-story.html?${params.toString()}`;
+                    setTimeout(() => { window.location.href = `learning-story.html?${params.toString()}`; }, 900);
                 });
 
                 // Guest同期: Ownerが変更したら反映
                 (function setupGuestSync(){
                     try {
                         const sock = window.__learningSocket || (window.__learningSocket = io());
-                        // Guest: Ownerの変更を反映
+
+                        // ルーム参加（Owner/Guestともに参加させ、スナップショット/通知を受け取る）
+                        if (roomId) {
+                            sock.emit('join_room', { roomId, playerName, role: userRole, mode: 'learning' });
+                        }
+
+                        // Guest: Ownerの変更を反映（物語が選ばれたら本文ページへ）
                         sock.on('learning_story_changed', ({ category, chapterId }) => {
-                            // Guestは本文ページへ遷移
                             try {
                                 const params = new URLSearchParams({ category, chapter: String(chapterId || 1) });
-                                if (typeof roomId !== 'undefined' && roomId) params.set('roomId', roomId);
-                                if (typeof playerName !== 'undefined' && playerName) params.set('playerName', playerName);
-                                if (typeof userRole !== 'undefined' && userRole) params.set('role', userRole);
-                                window.location.href = `learning-story.html?${params.toString()}`;
+                                if (roomId) params.set('roomId', roomId);
+                                if (playerName) params.set('playerName', playerName);
+                                if (userRole) params.set('role', userRole);
+                                // Guest側: 桜トーストを表示してから遷移
+                                if (typeof showSakuraToast === 'function') {
+                                    const chLabel = chapterId ? `第${chapterId}話` : '';
+                                    showSakuraToast(`主催者が「${chLabel}」を開きました。追従しています…`, 1000, '物語へ移動', '🌸');
+                                }
+                                setTimeout(() => { window.location.href = `learning-story.html?${params.toString()}`; }, 1000);
                                 return;
                             } catch (e) { /* フォールバック: 旧内表示 */ }
 
@@ -407,6 +512,17 @@
                             if (el) el.classList.add('active');
                         });
 
+                        // Guest: カテゴリ変更の反映（タイムラインとナビを同期表示）
+                        sock.on('learning_category_changed', ({ category }) => {
+                            if (!category) return;
+                            setActiveCategoryUI(category);
+                            if (typeof showSakuraToast === 'function') {
+                                const map = {numbers:'数値・データ',hardware:'ハードウェア',algorithms:'アルゴリズム',web:'Web技術',network:'ネットワーク',security:'セキュリティ'};
+                                const label = map[category] || category;
+                                showSakuraToast(`主催者が「${label}」を表示しました。`, 900, '表示切替', '🌸');
+                            }
+                        });
+
                         // Guest: 参加時のスナップショットを反映
                         sock.on('learning_story_snapshot', ({ currentCategory, selectedStory }) => {
                             // 物語が選択済みなら本文ページへ同期遷移
@@ -414,9 +530,9 @@
                             if (currentCategory && currentCategory !== 'menu' && chId) {
                                 try {
                                     const params = new URLSearchParams({ category: currentCategory, chapter: String(chId) });
-                                    if (typeof roomId !== 'undefined' && roomId) params.set('roomId', roomId);
-                                    if (typeof playerName !== 'undefined' && playerName) params.set('playerName', playerName);
-                                    if (typeof userRole !== 'undefined' && userRole) params.set('role', userRole);
+                                    if (roomId) params.set('roomId', roomId);
+                                    if (playerName) params.set('playerName', playerName);
+                                    if (userRole) params.set('role', userRole);
                                     window.location.href = `learning-story.html?${params.toString()}`;
                                     return;
                                 } catch (e) { /* no-op */ }
@@ -424,12 +540,47 @@
 
                             // 未選択時はカテゴリタイムラインだけ同期表示
                             if (!currentCategory || currentCategory === 'menu') currentCategory = 'numbers';
-                            document.querySelectorAll('#story-selector .c-timeline').forEach(el=>el.classList.add('c-hidden'));
-                            const tl = document.getElementById('tl-'+currentCategory);
-                            if (tl) tl.classList.remove('c-hidden');
+                            setActiveCategoryUI(currentCategory);
                         });
                     } catch (e) { /* 無視 */ }
                 })();
+
+                // カテゴリ選択UI制御：ナビのactiveとタイムラインの表示切替
+                function setActiveCategoryUI(cat) {
+                    // ナビのactive切替
+                    document.querySelectorAll('.wa-learning-nav .wa-nav-item').forEach(el => {
+                        el.classList.toggle('active', el.getAttribute('data-category') === cat);
+                    });
+                    // タイムライン表示切替
+                    document.querySelectorAll('#story-selector .c-timeline').forEach(el => el.classList.add('c-hidden'));
+                    const tl = document.getElementById('tl-' + cat) || document.getElementById('tl-numbers');
+                    if (tl) tl.classList.remove('c-hidden');
+                }
+
+                // Owner操作: カテゴリ選択時に同期送出
+                function selectCategory(cat) {
+                    setActiveCategoryUI(cat);
+                    try {
+                        if (userRole === 'owner' && roomId) {
+                            const sock = window.__learningSocket || (window.__learningSocket = io());
+                            sock.emit('learning_category_change', { roomId, category: cat });
+                        }
+                    } catch (e) { /* no-op */ }
+                }
+
+                // ナビクリック設定（Guestは操作不可＝無視、Ownerのみ反映）
+                document.querySelectorAll('.wa-learning-nav .wa-nav-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const cat = item.getAttribute('data-category');
+                        if (userRole !== 'owner') return; // Guestは操作しない
+                        selectCategory(cat);
+                        if (typeof showSakuraToast === 'function') {
+                            const map = {numbers:'数値・データ',hardware:'ハードウェア',algorithms:'アルゴリズム',web:'Web技術',network:'ネットワーク',security:'セキュリティ'};
+                            const label = map[cat] || cat;
+                            showSakuraToast(`「${label}」を表示します…`, 800, '表示切替', '🌸');
+                        }
+                    });
+                });
 
                 // 初期ロード
                 (async function initStorySelector(){
@@ -441,6 +592,15 @@
                         loadNetwork(),
                         loadSecurity()
                     ]);
+                    // 初期カテゴリ表示の反映（URLパラメータ優先）
+                    setActiveCategoryUI(initialCategoryParam);
+                    // Ownerなら初期カテゴリをサーバーへ同期（スナップショット整合）
+                    try {
+                        if (userRole === 'owner' && roomId) {
+                            const sock = window.__learningSocket || (window.__learningSocket = io());
+                            sock.emit('learning_category_change', { roomId, category: initialCategoryParam });
+                        }
+                    } catch (e) { /* no-op */ }
                 })();
             </script>
         </section>
@@ -1274,281 +1434,6 @@
             }
         }
     </style>
-
-    <script>
-        // URL パラメータから情報を取得
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomId = urlParams.get('roomId');
-        const playerName = urlParams.get('playerName');
-        const userRole = urlParams.get('role') || 'guest';
-        
-        // Socket.io 接続
-        const socket = io();
-        let currentCategory = 'numbers';
-        
-        // 初期化
-        if (roomId) {
-            document.getElementById('roomIdDisplay').textContent = roomId;
-            socket.emit('join_room', {
-                roomId: roomId,
-                playerName: playerName,
-                role: userRole,
-                mode: 'learning'
-            });
-        }
-        
-        if (playerName) {
-            document.getElementById('playerNameDisplay').textContent = playerName;
-        }
-        
-        // 役割表示の更新
-        const roleDisplay = document.getElementById('roleDisplay');
-        const syncControl = document.getElementById('syncControl');
-        
-        if (userRole === 'owner') {
-            roleDisplay.textContent = '👑 主催者';
-            roleDisplay.className = 'wa-role-badge owner';
-            if (syncControl) syncControl.style.display = 'block';
-            
-            // Owner用の制御パネルを表示
-            enableOwnerControls();
-        } else {
-            roleDisplay.textContent = '🎋 参加者';
-            roleDisplay.className = 'wa-role-badge guest';
-            
-            // Guest専用パネルを表示し、操作を無効化
-            showGuestSyncPanel();
-            disableGuestNavigation();
-        }
-        
-        // Socket.io イベントハンドラー
-        socket.on('room_joined', (data) => {
-            console.log('ルームに参加しました:', data);
-            if (userRole === 'guest') {
-                updateGuestSyncStatus('主催者様と接続済み', 'success');
-            } else {
-            }
-        });
-    // スクロール同期（正しい定義は後半にあります）
-
-        function selectCategory(category, shouldSync = true) {
-            // Ownerのみ同期イベントを送信
-            if (userRole === 'owner' && shouldSync && roomId) {
-                socket.emit('learning_category_change', {
-                    roomId: roomId,
-                    category: category
-                });
-            }
-            currentCategory = category;
-
-            // ナビゲーションの更新
-            document.querySelectorAll('.wa-nav-item').forEach(item => item.classList.remove('active'));
-            const nav = document.querySelector(`[data-category="${category}"]`);
-            if (nav) nav.classList.add('active');
-
-            // タイムラインの表示切替のみを行う（本文は別ページ）
-            const tlKeys = ['numbers','hardware','algorithms','web','network','security'];
-            if (tlKeys.includes(category)) {
-                document.querySelectorAll('#story-selector .c-timeline').forEach(el=>el.classList.add('c-hidden'));
-                const tl = document.getElementById('tl-'+category);
-                if (tl) tl.classList.remove('c-hidden');
-            }
-        }
-        
-        
-        
-        
-        
-        // 同期ステータス更新
-        function updateSyncStatus(status, type = 'info') {
-            const statusText = document.getElementById('syncStatusText');
-            const statusDot = document.getElementById('syncStatus');
-            
-            if (statusText) statusText.textContent = status;
-            if (statusDot) {
-                statusDot.className = `wa-status-dot ${type}`;
-            }
-        }
-        
-        function goToQuiz() {
-            if (roomId && playerName) {
-                window.location.href = `matching.html?roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&role=${encodeURIComponent(userRole)}`;
-            } else {
-                alert('クイズに挑戦するには、ルーム情報が必要です。');
-                window.location.href = 'index.html';
-            }
-        }
-        
-        function goHome() {
-            if (roomId) {
-                socket.emit('leave_room', { roomId: roomId });
-            }
-            window.location.href = 'index.html';
-        }
-        
-        // Owner用制御の有効化
-        function enableOwnerControls() {
-            // 全てのナビゲーション要素を有効化
-            document.querySelectorAll('.wa-nav-item').forEach(item => {
-                item.classList.remove('wa-nav-disabled');
-                item.style.pointerEvents = 'auto';
-            });
-        }
-        
-        // Guest同期パネルの表示
-        function showGuestSyncPanel() {
-            const panel = document.getElementById('guestSyncPanel');
-            if (panel) {
-                panel.style.display = 'block';
-                panel.classList.add('wa-fade-in');
-            }
-        }
-        
-        // Guestナビゲーションの無効化
-        function disableGuestNavigation() {
-            // 参加者は全てのナビゲーション操作を無効化（Ownerのみ操作可能）
-            document.querySelectorAll('.wa-nav-item').forEach(item => {
-                item.classList.add('wa-nav-disabled');
-                item.title = 'この操作は主催者のみが行えます';
-                item.style.pointerEvents = 'none';
-            });
-        }
-        
-        // Guest操作時の優雅な通知
-        function showGuestOperationNotice(category) {
-            // 既存の通知があれば削除
-            const existingNotice = document.getElementById('guestNotice');
-            if (existingNotice) {
-                existingNotice.remove();
-            }
-            
-            // 通知要素を作成
-            const notice = document.createElement('div');
-            notice.id = 'guestNotice';
-            notice.className = 'wa-guest-notice wa-fade-in';
-            notice.innerHTML = `
-                <div class="wa-notice-content">
-                    <div class="wa-notice-icon">🌸</div>
-                    <div class="wa-notice-text">
-                        <h4>優雅なる学習同期</h4>
-                        <p>この操作は主催者様が行います。<br>美しい調べに身を委ねてお待ちください。</p>
-                    </div>
-                    <button class="wa-notice-close" onclick="this.closest('.wa-guest-notice').remove();">×</button>
-                </div>
-            `;
-            
-            document.body.appendChild(notice);
-            
-            // 3秒後に自動削除
-            setTimeout(() => {
-                if (notice.parentNode) {
-                    notice.classList.add('wa-fade-out');
-                    setTimeout(() => notice.remove(), 300);
-                }
-            }, 3000);
-        }
-        
-        // 同期ステータスの更新（Guest専用）
-        function updateGuestSyncStatus(status, type = 'success') {
-            const statusText = document.getElementById('syncStatusText');
-            const statusDot = document.getElementById('syncStatusDot');
-            
-            if (statusText) statusText.textContent = status;
-            if (statusDot) {
-                statusDot.className = `wa-sync-status-dot wa-sync-${type}`;
-            }
-        }
-        
-        // ナビゲーションクリックイベント
-        document.querySelectorAll('.wa-nav-item').forEach(item => {
-            item.addEventListener('click', (event) => {
-                const category = item.dataset.category;
-                // Guestはすべて無効化（Ownerのみ操作可能）
-                if (userRole === 'guest') {
-                    event.preventDefault();
-                    showGuestOperationNotice(category);
-                    return;
-                }
-                // Ownerの場合は正常に操作
-                selectCategory(category);
-            });
-        });
-        
-        // 四季装飾の初期化
-        document.addEventListener('DOMContentLoaded', () => {
-            generateSeasonalElements('spring');
-            setInterval(() => changeSeason(), 45000); // 45秒ごとに季節変更
-        });
-        
-        // 四季装飾関数（index.htmlから流用）
-        const seasons = ['spring', 'summer', 'autumn', 'winter'];
-        let currentSeasonIndex = 0;
-        
-        function changeSeason() {
-            const seasonElement = document.getElementById('seasonalDecoration');
-            currentSeasonIndex = (currentSeasonIndex + 1) % seasons.length;
-            const season = seasons[currentSeasonIndex];
-            seasonElement.className = `seasonal-decoration season-${season}`;
-            generateSeasonalElements(season);
-        }
-        
-        function generateSeasonalElements(season) {
-            const container = document.getElementById('seasonalDecoration');
-            container.innerHTML = '';
-            
-            const elementCount = 6; // 学習モードでは少し控えめに
-            
-            for (let i = 0; i < elementCount; i++) {
-                const element = document.createElement('div');
-                
-                switch (season) {
-                    case 'spring':
-                        element.className = 'sakura-petal';
-                        element.style.left = Math.random() * 100 + '%';
-                        element.style.animationDelay = Math.random() * 8 + 's';
-                        element.style.animationDuration = (6 + Math.random() * 4) + 's';
-                        break;
-                        
-                    case 'summer':
-                        element.className = 'summer-leaf';
-                        element.style.cssText = `
-                            position: absolute;
-                            width: 8px;
-                            height: 8px;
-                            background: var(--tsuyu);
-                            border-radius: 50% 0 50% 0;
-                            left: ${Math.random() * 100}%;
-                            animation: summerSway ${4 + Math.random() * 3}s ease-in-out infinite;
-                            animation-delay: ${Math.random() * 4}s;
-                            opacity: 0.3;
-                        `;
-                        break;
-                        
-                    case 'autumn':
-                        element.className = 'momiji-leaf';
-                        element.style.left = Math.random() * 100 + '%';
-                        element.style.animationDelay = Math.random() * 10 + 's';
-                        element.style.animationDuration = (8 + Math.random() * 4) + 's';
-                        break;
-                        
-                    case 'winter':
-                        element.className = 'snow-flake';
-                        element.innerHTML = '❄';
-                        element.style.cssText = `
-                            position: absolute;
-                            color: var(--yuki);
-                            font-size: ${6 + Math.random() * 6}px;
-                            left: ${Math.random() * 100}%;
-                            animation: snowFall ${6 + Math.random() * 6}s linear infinite;
-                            animation-delay: ${Math.random() * 6}s;
-                            opacity: 0.6;
-                        `;
-                        break;
-                }
-                
-                container.appendChild(element);
-            }
-        }
-    </script>
+    <!-- 統合済み: 末尾の重複スクリプトは削除しました（上部スクリプトで同期・装飾を一元管理） -->
 </body>
 </html>

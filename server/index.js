@@ -19,12 +19,18 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../client')));
+// 学習用データ(JSON)の静的配信
+app.use('/data', express.static(path.join(__dirname, '../data')));
 
 // ルーム管理
 const rooms = new Map(); // roomId -> { players: [{id, name, ready, role}], quizState: {}, learningState: {} }
 
 // Ownerセッション管理
 const ownerSessions = new Map(); // ownerName -> { currentRoomId, previousRoomIds: [] }
+
+// Ownerの画面遷移中（ロビー→モード選択など）を一時的に保護するための管理
+// roomId -> { ownerName: string, timestamp: number, cleanupTimer: NodeJS.Timeout }
+const transitioningOwners = new Map();
 
 // Ownerのルーム作成処理（過去ルーム自動削除）
 function handleOwnerRoomCreation(ownerName, newRoomId, socket) {
@@ -96,7 +102,8 @@ io.on('connection', (socket) => {
         learningState: {
           currentCategory: 'menu',
           scrollPosition: {},
-          isActive: false
+          isActive: false,
+          selectedStory: {}
         }
       });
     }
@@ -153,6 +160,17 @@ io.on('connection', (socket) => {
       players: room.players.map(p => ({ name: p.name, ready: p.ready, role: p.role })),
       canStart: room.players.length === 2
     });
+
+    // 学習中の章スナップショットを新規参加者へ送信（初期同期）
+    try {
+      const snapshot = {
+        currentCategory: room.learningState.currentCategory,
+        selectedStory: room.learningState.selectedStory || {}
+      };
+      socket.emit('learning_story_snapshot', snapshot);
+    } catch (e) {
+      console.warn('learning_story_snapshot emit failed:', e);
+    }
 
     // 2人揃った場合はマッチング完了通知
     if (room.players.length === 2) {
@@ -218,6 +236,31 @@ io.on('connection', (socket) => {
     socket.to(roomId).emit('learning_scroll_sync', { category, scrollTop });
   });
 
+  // 学習モード: 物語選択の同期（Owner→Guest）
+  socket.on('learning_story_change', (data) => {
+    const { roomId, category, chapterId } = data || {};
+    if (!socket.roomId || socket.roomId !== roomId) return;
+    if (socket.role !== 'owner') return; // Ownerのみ制御可能
+
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    try {
+      // 状態更新
+      room.learningState.currentCategory = category || room.learningState.currentCategory || 'menu';
+      if (!room.learningState.selectedStory) room.learningState.selectedStory = {};
+      if (category && chapterId != null) {
+        room.learningState.selectedStory[category] = chapterId;
+      }
+
+      // 他参加者へ同期配信
+      socket.to(roomId).emit('learning_story_changed', { category, chapterId });
+      console.log(`部屋 ${roomId} で物語が変更されました: category=${category}, chapter=${chapterId}`);
+    } catch (e) {
+      console.warn('learning_story_change で例外:', e);
+    }
+  });
+
   // モード選択画面への遷移（Ownerが先に進む時）
   socket.on('proceed_to_mode_select', (data) => {
     const { roomId } = data;
@@ -230,6 +273,53 @@ io.on('connection', (socket) => {
     
     console.log(`Owner ${socket.playerName} がモード選択画面へ遷移します (ルーム: ${roomId})`);
     
+    // 遷移中フラグをセット（10秒のグレース期間）
+    try {
+      const existing = transitioningOwners.get(roomId);
+      if (existing?.cleanupTimer) {
+        clearTimeout(existing.cleanupTimer);
+      }
+      const cleanupTimer = setTimeout(() => {
+        const info = transitioningOwners.get(roomId);
+        if (!info) return;
+        const r = rooms.get(roomId);
+        if (!r) {
+          transitioningOwners.delete(roomId);
+          return;
+        }
+        // まだ再接続していない場合は、Ownerを正式に切断扱いにする
+        const ownerIdx = r.players.findIndex(p => p.role === 'owner' && p.name === info.ownerName);
+        if (ownerIdx !== -1) {
+          const ownerPlayer = r.players[ownerIdx];
+          // プレイヤー削除とスコア掃除
+          r.players.splice(ownerIdx, 1);
+          delete r.quizState.scores[ownerPlayer.id];
+          console.log(`遷移猶予切れ: ルーム ${roomId} の Owner ${ownerPlayer.name} を切断扱いにしました`);
+          // 残ったプレイヤーに通知とステータス更新
+          io.to(roomId).emit('player_disconnected', {
+            playerName: ownerPlayer.name,
+            role: ownerPlayer.role
+          });
+          io.to(roomId).emit('room_status', {
+            players: r.players.map(p => ({ name: p.name, ready: p.ready, role: p.role })),
+            canStart: r.players.length === 2
+          });
+          if (r.players.length === 0) {
+            rooms.delete(roomId);
+            console.log(`部屋 ${roomId} が削除されました (遷移猶予切れ後に全員不在)`);
+          }
+        }
+        transitioningOwners.delete(roomId);
+      }, 10000);
+      transitioningOwners.set(roomId, {
+        ownerName: socket.playerName,
+        timestamp: Date.now(),
+        cleanupTimer
+      });
+    } catch (e) {
+      console.warn('遷移中フラグ設定で例外:', e);
+    }
+    
     // Guestにモード選択画面への遷移を通知
     socket.to(roomId).emit('owner_proceeded_to_mode_select', {
       roomId: roomId,
@@ -239,27 +329,95 @@ io.on('connection', (socket) => {
 
   // モード選択画面での接続（両プレイヤー）
   socket.on('mode_select_join', (data) => {
-    const { roomId, playerName, role } = data;
+    const { roomId, playerName, role, recovery } = data;
     
-    console.log(`${playerName} (${role}) がモード選択画面に接続しました (ルーム: ${roomId})`);
+    console.log(`${playerName} (${role}) がモード選択画面に接続しました (ルーム: ${roomId}${recovery ? ' - 復旧モード' : ''})`);
+    
+    // 入力値の検証
+    if (!roomId || !playerName || !role) {
+      console.log(`モード選択画面接続時に必要なパラメータが不足: roomId=${roomId}, playerName=${playerName}, role=${role}`);
+      socket.emit('room_not_found');
+      return;
+    }
     
     socket.roomId = roomId;
     socket.playerName = playerName;
     socket.role = role;
     socket.join(roomId);
     
-    const room = rooms.get(roomId);
+    let room = rooms.get(roomId);
     if (!room) {
-      console.log(`警告: ルーム ${roomId} が見つかりません`);
-      socket.emit('room_not_found');
-      return;
+      console.log(`警告: ルーム ${roomId} が見つかりません。利用可能ルーム: ${Array.from(rooms.keys()).join(', ')}`);
+      
+      // 復旧モードの場合、ルームを再作成する
+      if (recovery) {
+        console.log(`復旧モード: ルーム ${roomId} を再作成します`);
+        room = {
+          id: roomId,
+          players: [],
+          mode: null,
+          createdAt: Date.now()
+        };
+        rooms.set(roomId, room);
+      } else {
+        socket.emit('room_not_found');
+        return;
+      }
     }
     
-    // 既存プレイヤーの更新
+    // ロビー→モード選択の遷移中であれば、猶予フラグを解除
+    if (role === 'owner') {
+      const transitionInfo = transitioningOwners.get(roomId);
+      if (transitionInfo && transitionInfo.ownerName === playerName) {
+        try {
+          if (transitionInfo.cleanupTimer) clearTimeout(transitionInfo.cleanupTimer);
+        } catch (e) {}
+        transitioningOwners.delete(roomId);
+        console.log(`遷移完了: ルーム ${roomId} の Owner ${playerName} の遷移フラグを解除しました`);
+      }
+    }
+    
+    // プレイヤーが既にルームに存在するかチェック
     const existingPlayer = room.players.find(p => p.name === playerName && p.role === role);
     if (existingPlayer) {
+      // 既存プレイヤーの接続IDを更新（スコアも引き継ぎ）
+      const oldId = existingPlayer.id;
       existingPlayer.id = socket.id;
+      if (room.quizState?.scores && room.quizState.scores.hasOwnProperty(oldId)) {
+        room.quizState.scores[socket.id] = room.quizState.scores[oldId];
+        delete room.quizState.scores[oldId];
+      }
       console.log(`${playerName} (${role}) の接続IDを更新しました`);
+    } else {
+      // 新しいプレイヤーの場合、ルーム状況を詳しく確認
+      console.log(`新規プレイヤー ${playerName} (${role}) がルームに参加を試みています`);
+      console.log(`現在のルーム状況: ${room.players.map(p => `${p.name}(${p.role})`).join(', ')}`);
+      
+      // 復旧モードの場合、プレイヤー情報を再作成
+      if (recovery) {
+        console.log(`復旧モード: プレイヤー ${playerName} (${role}) の情報を復元します`);
+        room.players.push({
+          id: socket.id,
+          name: playerName,
+          role: role,
+          ready: false
+        });
+        console.log(`プレイヤー復元完了: ${playerName} (${role})`);
+      } else {
+        // 通常モードでも、遷移中に切断扱いになったケース等に備えて不足プレイヤーを再追加
+        const sameRolePlayers = room.players.filter(p => p.role === role);
+        if (sameRolePlayers.length === 0 && room.players.length < 2) {
+          room.players.push({
+            id: socket.id,
+            name: playerName,
+            role: role,
+            ready: false
+          });
+          console.log(`プレイヤーを再追加: ${playerName} (${role})`);
+        } else {
+          console.log(`警告: ${role} として接続しようとしていますが、該当する役割のプレイヤーがルームに存在しません`);
+        }
+      }
     }
     
     socket.emit('mode_select_connected', {
@@ -385,6 +543,13 @@ io.on('connection', (socket) => {
     if (socket.roomId) {
       const room = rooms.get(socket.roomId);
       if (room) {
+        // Ownerがモード選択へ遷移中の場合は、一定時間は切断扱いにしない
+        const t = transitioningOwners.get(socket.roomId);
+        const isOwnerTransitioning = t && socket.role === 'owner' && t.ownerName === socket.playerName;
+        if (isOwnerTransitioning) {
+          console.log(`Owner ${socket.playerName} は遷移中のため、一時的な切断を無視します (ルーム: ${socket.roomId})`);
+          return;
+        }
         // 切断されたプレイヤーの情報を保存
         const disconnectedPlayer = room.players.find(p => p.id === socket.id);
         
@@ -406,7 +571,16 @@ io.on('connection', (socket) => {
         if (room.players.length === 0) {
           // ルームが空の場合は削除
           rooms.delete(socket.roomId);
-          console.log(`部屋 ${socket.roomId} が削除されました`);
+          console.log(`部屋 ${socket.roomId} が削除されました (全プレイヤーが切断)`);
+          
+          // Ownerセッション情報もクリーンアップ
+          if (socket.role === 'owner' && socket.playerName) {
+            const ownerSession = ownerSessions.get(socket.playerName);
+            if (ownerSession && ownerSession.currentRoomId === socket.roomId) {
+              ownerSessions.delete(socket.playerName);
+              console.log(`Owner ${socket.playerName} のセッション情報を最終クリーンアップしました`);
+            }
+          }
         } else {
           // 残ったプレイヤーに通知
           if (disconnectedPlayer) {

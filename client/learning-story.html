@@ -104,22 +104,46 @@
     backLink.href = `learning.html?${backParams.toString()}`;
 
     // カテゴリ→JSONパスのマップ
-    const STORY_PATHS = {
-      numbers: '/data/stories/01_numbers.json',
-      hardware: '/data/stories/02_hardware.json',
-      algorithms: '/data/stories/03_algorithms.json',
-      web: '/data/stories/04_web.json',
-      network: '/data/stories/05_network.json',
-      security: '/data/stories/06_security.json'
+    // カテゴリ→リソース（manifest優先・旧JSONは後方互換）
+    const CATEGORY_RESOURCES = {
+      numbers:   { manifest: '/data/stories/numbers/manifest.json',   fallback: '/data/stories/01_numbers.json' },
+      hardware:  { manifest: '/data/stories/hardware/manifest.json',  fallback: '/data/stories/02_hardware.json' },
+      algorithms:{ manifest: '/data/stories/algorithms/manifest.json',fallback: '/data/stories/03_algorithms.json' },
+      web:       { manifest: '/data/stories/web/manifest.json',       fallback: '/data/stories/04_web.json' },
+      network:   { manifest: '/data/stories/network/manifest.json',   fallback: '/data/stories/05_network.json' },
+      security:  { manifest: '/data/stories/security/manifest.json',  fallback: '/data/stories/06_security.json' }
     };
+
+    function getCategoryResource(cat) {
+      return CATEGORY_RESOURCES[cat] || null;
+    }
+
+    function resolveRelativeUrl(baseUrl, relativePath) {
+      try {
+        const base = new URL(baseUrl, window.location.origin);
+        const resolved = new URL(relativePath, base);
+        return resolved.pathname + resolved.search + resolved.hash;
+      } catch (e) {
+        return relativePath; // フォールバック
+      }
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`fetch failed: ${url} (${res.status})`);
+      }
+      return res.json();
+    }
 
     function escapeHTML(s) {
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    let CURRENT_JSON = null;
-    let CURRENT_CHAPTERS = [];
-    let CURRENT_INDEX = -1;
+    let CURRENT_JSON = null;       // manifest または 旧JSON全体
+    let CURRENT_CHAPTERS = [];     // 章（=話）メタ配列
+    let CURRENT_INDEX = -1;        // 現在インデックス
+    const CHAPTER_CACHE = new Map(); // 章ファイルのキャッシュ（manifest方式）
 
     function typewriterEffect(element, onDone) {
       element.classList.add('typed');
@@ -168,16 +192,109 @@
     async function loadStory(nextCategory = null, nextChapterId = null) {
       if (nextCategory) category = nextCategory;
       if (nextChapterId != null) chapterId = parseInt(nextChapterId, 10);
-      const path = STORY_PATHS[category];
-      if (!path) {
+
+      const resInfo = getCategoryResource(category);
+      if (!resInfo) {
         document.getElementById('pageSubtitle').textContent = 'カテゴリが見つかりません';
         return;
       }
+
+      // 共通: タイトル・サブタイトルのカテゴリ表示
+      const catLabelMap = {
+        numbers: '🔢 数値とデータの基礎',
+        hardware: '💾 ハードウェア',
+        algorithms: '🔄 アルゴリズム',
+        web: '🌐 Web技術',
+        network: '🔗 ネットワーク',
+        security: '🔐 セキュリティ'
+      };
+      document.getElementById('pageSubtitle').textContent = catLabelMap[category] || '';
+      document.getElementById('storyTitle').textContent = `${catLabelMap[category] || ''}`;
+
       try {
-        const res = await fetch(path);
-        if (!res.ok) throw new Error('not found');
-        CURRENT_JSON = await res.json();
-        CURRENT_CHAPTERS = CURRENT_JSON.chapters || [];
+        // まずは manifest 方式を試す
+        let useManifest = false;
+        let manifestUrl = resInfo.manifest;
+        let manifest = null;
+        try {
+          manifest = await fetchJson(manifestUrl);
+          useManifest = Array.isArray(manifest?.chapters);
+        } catch (err) {
+          useManifest = false; // manifest が無ければ旧JSONへ
+        }
+
+        if (useManifest) {
+          CURRENT_JSON = manifest;
+          CURRENT_CHAPTERS = manifest.chapters || [];
+          const chMeta = CURRENT_CHAPTERS.find(c => String(c.id) === String(chapterId)) || CURRENT_CHAPTERS[0];
+          if (!chMeta) {
+            document.getElementById('pageSubtitle').textContent = '章データが見つかりません';
+            return;
+          }
+          CURRENT_INDEX = CURRENT_CHAPTERS.findIndex(c => String(c.id) === String(chMeta.id));
+
+          // 章の中身を個別ファイルから取得（キャッシュあり）
+          let chData = chMeta;
+          if (chMeta.file) {
+            const chapterUrl = resolveRelativeUrl(manifestUrl, chMeta.file);
+            if (CHAPTER_CACHE.has(chapterUrl)) {
+              chData = CHAPTER_CACHE.get(chapterUrl);
+            } else {
+              chData = await fetchJson(chapterUrl);
+              CHAPTER_CACHE.set(chapterUrl, chData);
+            }
+          }
+
+          // 表示
+          document.getElementById('storySubtitle').textContent = `第${chData.id ?? chMeta.id}話：${chData.title ?? chMeta.title}`;
+          const storyEl = document.getElementById('storyBody');
+          const lines = chData.story || [];
+          const html = lines.map(p => p ? escapeHTML(p) : '<br>').map(l => /<br>/.test(l) ? l : l + '<br>').join('');
+          storyEl.innerHTML = html;
+          storyEl.parentElement?.parentElement?.scrollTo?.(0, 0);
+          const kc = document.querySelector('.wa-key-concepts');
+          if (kc) kc.classList.remove('visible');
+          typewriterEffect(storyEl, () => {
+            const box = document.querySelector('.wa-key-concepts');
+            if (box) box.classList.add('visible');
+          });
+
+          // 短歌
+          if (chData.poem) {
+            const poemHtml = `
+              <div class="wa-poem-section">
+                <div class="wa-poem-title">📜 ${escapeHTML(chData.poem.title || '詩')}</div>
+                <div class="wa-poem-text">${(chData.poem.lines || []).map(x => escapeHTML(x)).join('<br>')}</div>
+              </div>`;
+            storyEl.insertAdjacentHTML('beforeend', poemHtml);
+          }
+
+          // 重要概念
+          const list = document.getElementById('conceptList');
+          const keyPoints = chData.keyPoints || [];
+          list.innerHTML = keyPoints.map(kp => `
+            <div class="wa-concept-item"><strong>${escapeHTML(kp.term || '')}</strong>: ${escapeHTML(kp.definition || '')}</div>
+          `).join('');
+
+          updateNavButtons();
+          updateUrlQuery();
+
+          // Owner同期
+          try {
+            if (userRole === 'owner' && roomId) {
+              const sock = window.__learningSocketStory || (window.__learningSocketStory = io());
+              sock.emit('learning_story_change', { roomId, category, chapterId });
+            }
+          } catch (e) { /* no-op */ }
+
+          return; // manifest 方式の処理完了
+        }
+
+        // 旧JSON（カテゴリ単一ファイル）へのフォールバック
+        const oldUrl = resInfo.fallback;
+        const legacy = await fetchJson(oldUrl);
+        CURRENT_JSON = legacy;
+        CURRENT_CHAPTERS = legacy.chapters || [];
         const ch = CURRENT_CHAPTERS.find(c => String(c.id) === String(chapterId)) || CURRENT_CHAPTERS[0];
         if (!ch) {
           document.getElementById('pageSubtitle').textContent = '章データが見つかりません';
@@ -185,20 +302,7 @@
         }
         CURRENT_INDEX = CURRENT_CHAPTERS.findIndex(c => String(c.id) === String(ch.id));
 
-        // タイトル・サブタイトル
-        const catLabelMap = {
-          numbers: '🔢 数値とデータの基礎',
-          hardware: '💾 ハードウェア',
-          algorithms: '🔄 アルゴリズム',
-          web: '🌐 Web技術',
-          network: '🔗 ネットワーク',
-          security: '🔐 セキュリティ'
-        };
-        document.getElementById('pageSubtitle').textContent = catLabelMap[category] || '';
-        document.getElementById('storyTitle').textContent = `${catLabelMap[category] || ''}`;
-        document.getElementById('storySubtitle').textContent = `第${ch.id}章：${ch.title}`;
-
-        // 本文
+        document.getElementById('storySubtitle').textContent = `第${ch.id}話：${ch.title}`;
         const storyEl = document.getElementById('storyBody');
         const lines = ch.story || [];
         const html = lines.map(p => p ? escapeHTML(p) : '<br>').map(l => /<br>/.test(l) ? l : l + '<br>').join('');
@@ -211,7 +315,6 @@
           if (box) box.classList.add('visible');
         });
 
-        // 短歌
         if (ch.poem) {
           const poemHtml = `
             <div class="wa-poem-section">
@@ -221,18 +324,15 @@
           storyEl.insertAdjacentHTML('beforeend', poemHtml);
         }
 
-        // 重要概念
         const list = document.getElementById('conceptList');
         const keyPoints = ch.keyPoints || [];
         list.innerHTML = keyPoints.map(kp => `
           <div class="wa-concept-item"><strong>${escapeHTML(kp.term || '')}</strong>: ${escapeHTML(kp.definition || '')}</div>
         `).join('');
 
-        // ナビゲーション状態とURL反映
         updateNavButtons();
         updateUrlQuery();
 
-        // Ownerの場合は物語選択の同期を送信
         try {
           if (userRole === 'owner' && roomId) {
             const sock = window.__learningSocketStory || (window.__learningSocketStory = io());

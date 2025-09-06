@@ -142,39 +142,170 @@
                         node.innerHTML = `
                             <div class='c-pin'></div>
                             <div class='c-card wa-pulse' data-story-title="${it.title}" data-cat="${catKey}" data-ep="${it.ep}">
-                                <div class='c-title'>${it.icon ? `<span style="margin-right:6px;">${it.icon}</span>` : ''}${it.title}</div>
+                                <div class='c-title'>${(it.icon && !/^\d+$/.test(it.icon)) ? `<span style="margin-right:6px;">${it.icon}</span>` : ''}${it.title}</div>
                                 <div class='c-sub'>${it.summary || '短いあらすじがここに入ります。'}</div>
-                                <div class='c-meta'>
-                                    <span class='c-chip'>第${it.ep}話</span>
-                                    <span class='c-chip'>学習 5〜8分</span>
-                                </div>
                             </div>`;
                         root.appendChild(node);
                     });
                 }
 
-                // カテゴリ: numbers をJSONから読み込んで描画
+                // カテゴリ: numbers を manifest.json 優先で読み込み、無ければ従来JSONにフォールバック
                 async function loadNumbers() {
+                    const manifestUrl = '/data/stories/numbers/manifest.json';
                     try {
+                        // manifest 試行
+                        let manifest = null;
+                        try {
+                            const r = await fetch(manifestUrl);
+                            if (r.ok) {
+                                manifest = await r.json();
+                            }
+                        } catch (_) {}
+
+                        if (manifest && Array.isArray(manifest.chapters)) {
+                            STORIES.numbers = manifest;
+                            const items = (manifest.chapters || []).map(ch => ({
+                                ep: ch.id,
+                                title: `第${ch.id}話：${ch.title}`,
+                                icon: ch.icon || '',
+                                summary: ch.summary || ''
+                            }));
+                            renderTimeline('tl-numbers', items, 'numbers');
+                            return;
+                        }
+
+                        // 旧JSONフォールバック
                         const res = await fetch('/data/stories/01_numbers.json');
                         if (!res.ok) throw new Error('numbers JSON not found');
                         const json = await res.json();
                         STORIES.numbers = json;
                         const items = (json.chapters || []).map(ch => ({
                             ep: ch.id,
-                            title: `第${ch.id}章：${ch.title}`,
+                            title: `第${ch.id}話：${ch.title}`,
                             icon: ch.icon || '',
                             summary: ch.summary || ''
                         }));
                         renderTimeline('tl-numbers', items, 'numbers');
                     } catch (e) {
-                        // フォールバック（3話）
+                        // フォールバック（簡易3話）
                         const fallback = [
-                            { ep: 1, title: '第一章：二進法の恋文', icon: '01', summary: '' },
-                            { ep: 2, title: '第二章：データ型の恋愛関係', icon: '02', summary: '' },
-                            { ep: 3, title: '第三章：進数変換の愛', icon: '03', summary: '' }
+                            { ep: 1, title: '第1話：二進法の恋文', icon: '01', summary: '' },
+                            { ep: 2, title: '第2話：データ型の恋愛関係', icon: '02', summary: '' },
+                            { ep: 3, title: '第3話：進数変換の愛', icon: '03', summary: '' }
                         ];
                         renderTimeline('tl-numbers', fallback, 'numbers');
+                    }
+                }
+
+                // アルゴリズムは manifest 優先で読み込む
+                async function loadAlgorithms() {
+                    const manifestUrl = '/data/stories/algorithms/manifest.json';
+                    try {
+                        let manifest = null;
+                        try {
+                            const r = await fetch(manifestUrl);
+                            if (r.ok) manifest = await r.json();
+                        } catch (_) {}
+
+                        if (manifest && Array.isArray(manifest.chapters)) {
+                            STORIES.algorithms = manifest;
+                            const items = (manifest.chapters || []).map(ch => ({
+                                ep: ch.id,
+                                title: `第${ch.id}話：${ch.title}`,
+                                icon: ch.icon || '',
+                                summary: ch.summary || ''
+                            }));
+                            renderTimeline('tl-algorithms', items, 'algorithms');
+                            return;
+                        }
+                        await loadCategory('algorithms', '/data/stories/03_algorithms.json');
+                    } catch (e) {
+                        const items = (TL_DATA_FALLBACK['algorithms'] || []).map((title, idx) => ({ ep: idx+1, title, icon: '', summary: '' }));
+                        renderTimeline('tl-algorithms', items, 'algorithms');
+                    }
+                }
+
+                // Webは manifest 優先で読み込む
+                async function loadWeb() {
+                    const manifestUrl = '/data/stories/web/manifest.json';
+                    try {
+                        let manifest = null;
+                        try {
+                            const r = await fetch(manifestUrl);
+                            if (r.ok) manifest = await r.json();
+                        } catch (_) {}
+
+                        if (manifest && Array.isArray(manifest.chapters)) {
+                            STORIES.web = manifest;
+                            const items = (manifest.chapters || []).map(ch => ({
+                                ep: ch.id,
+                                title: `第${ch.id}話：${ch.title}`,
+                                icon: ch.icon || '',
+                                summary: ch.summary || ''
+                            }));
+                            renderTimeline('tl-web', items, 'web');
+                            return;
+                        }
+                        await loadCategory('web', '/data/stories/04_web.json');
+                    } catch (e) {
+                        const items = (TL_DATA_FALLBACK['web'] || []).map((title, idx) => ({ ep: idx+1, title, icon: '', summary: '' }));
+                        renderTimeline('tl-web', items, 'web');
+                    }
+                }
+
+                // ネットワークは manifest 優先で読み込む
+                async function loadNetwork() {
+                    const manifestUrl = '/data/stories/network/manifest.json';
+                    try {
+                        let manifest = null;
+                        try {
+                            const r = await fetch(manifestUrl);
+                            if (r.ok) manifest = await r.json();
+                        } catch (_) {}
+
+                        if (manifest && Array.isArray(manifest.chapters)) {
+                            STORIES.network = manifest;
+                            const items = (manifest.chapters || []).map(ch => ({
+                                ep: ch.id,
+                                title: `第${ch.id}話：${ch.title}`,
+                                icon: ch.icon || '',
+                                summary: ch.summary || ''
+                            }));
+                            renderTimeline('tl-network', items, 'network');
+                            return;
+                        }
+                        await loadCategory('network', '/data/stories/05_network.json');
+                    } catch (e) {
+                        const items = (TL_DATA_FALLBACK['network'] || []).map((title, idx) => ({ ep: idx+1, title, icon: '', summary: '' }));
+                        renderTimeline('tl-network', items, 'network');
+                    }
+                }
+
+                // セキュリティは manifest 優先で読み込む
+                async function loadSecurity() {
+                    const manifestUrl = '/data/stories/security/manifest.json';
+                    try {
+                        let manifest = null;
+                        try {
+                            const r = await fetch(manifestUrl);
+                            if (r.ok) manifest = await r.json();
+                        } catch (_) {}
+
+                        if (manifest && Array.isArray(manifest.chapters)) {
+                            STORIES.security = manifest;
+                            const items = (manifest.chapters || []).map(ch => ({
+                                ep: ch.id,
+                                title: `第${ch.id}話：${ch.title}`,
+                                icon: ch.icon || '',
+                                summary: ch.summary || ''
+                            }));
+                            renderTimeline('tl-security', items, 'security');
+                            return;
+                        }
+                        await loadCategory('security', '/data/stories/06_security.json');
+                    } catch (e) {
+                        const items = (TL_DATA_FALLBACK['security'] || []).map((title, idx) => ({ ep: idx+1, title, icon: '', summary: '' }));
+                        renderTimeline('tl-security', items, 'security');
                     }
                 }
 
@@ -187,7 +318,7 @@
                         STORIES[cat] = json;
                         const items = (json.chapters || []).map(ch => ({
                             ep: ch.id,
-                            title: `第${ch.id}章：${ch.title}`,
+                            title: `第${ch.id}話：${ch.title}`,
                             icon: ch.icon || '',
                             summary: ch.summary || ''
                         }));
@@ -195,6 +326,38 @@
                     } catch (e) {
                         const items = (TL_DATA_FALLBACK[cat] || []).map((title, idx) => ({ ep: idx+1, title, icon: '', summary: '' }));
                         renderTimeline('tl-'+cat, items, cat);
+                    }
+                }
+
+                // ハードウェアは manifest 優先で読み込む
+                async function loadHardware() {
+                    const manifestUrl = '/data/stories/hardware/manifest.json';
+                    try {
+                        let manifest = null;
+                        try {
+                            const r = await fetch(manifestUrl);
+                            if (r.ok) {
+                                manifest = await r.json();
+                            }
+                        } catch (_) {}
+
+                        if (manifest && Array.isArray(manifest.chapters)) {
+                            STORIES.hardware = manifest;
+                            const items = (manifest.chapters || []).map(ch => ({
+                                ep: ch.id,
+                                title: `第${ch.id}話：${ch.title}`,
+                                icon: ch.icon || '',
+                                summary: ch.summary || ''
+                            }));
+                            renderTimeline('tl-hardware', items, 'hardware');
+                            return;
+                        }
+
+                        // 旧JSONフォールバック
+                        await loadCategory('hardware', '/data/stories/02_hardware.json');
+                    } catch (e) {
+                        const items = (TL_DATA_FALLBACK['hardware'] || []).map((title, idx) => ({ ep: idx+1, title, icon: '', summary: '' }));
+                        renderTimeline('tl-hardware', items, 'hardware');
                     }
                 }
 
@@ -272,11 +435,11 @@
                 (async function initStorySelector(){
                     await Promise.all([
                         loadNumbers(),
-                        loadCategory('hardware', '/data/stories/02_hardware.json'),
-                        loadCategory('algorithms', '/data/stories/03_algorithms.json'),
-                        loadCategory('web', '/data/stories/04_web.json'),
-                        loadCategory('network', '/data/stories/05_network.json'),
-                        loadCategory('security', '/data/stories/06_security.json')
+                        loadHardware(),
+                        loadAlgorithms(),
+                        loadWeb(),
+                        loadNetwork(),
+                        loadSecurity()
                     ]);
                 })();
             </script>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学習方式選択 - CS学習クイズバトル</title>
     <link rel="stylesheet" href="css/taisho.css">
+    <script src="js/toast.js"></script>
 </head>
 <body>
     <!-- 四季の装飾要素 -->
@@ -252,22 +253,24 @@
                 }
             });
             
-            // 学習モード選択時の遷移
+            // 学習モード選択時の遷移（桜トースト表示 → 遷移）
             socket.on('redirect_to_learning', (data) => {
                 console.log('学習画面への遷移指示を受信:', data);
                 showModeRedirectMessage('learning', data.message);
-                setTimeout(() => {
-                    proceedToSelectedMode('learning');
-                }, 1500);
+                if (typeof showSakuraToast === 'function') {
+                    showSakuraToast('学習モードを開始します。遷移しています…', 1200, '学習開始', '📚');
+                }
+                setTimeout(() => { proceedToSelectedMode('learning'); }, 1200);
             });
             
-            // クイズモード選択時の遷移
+            // クイズモード選択時の遷移（桜トースト表示 → 遷移）
             socket.on('redirect_to_matching', (data) => {
                 console.log('マッチング画面への遷移指示を受信:', data);
                 showModeRedirectMessage('quiz', data.message);
-                setTimeout(() => {
-                    proceedToSelectedMode('quiz');
-                }, 1500);
+                if (typeof showSakuraToast === 'function') {
+                    showSakuraToast('クイズモードを開始します。遷移しています…', 1200, 'クイズ開始', '⚔️');
+                }
+                setTimeout(() => { proceedToSelectedMode('quiz'); }, 1200);
             });
             
             return socket;

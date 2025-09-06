@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学習の間 - 宵 月灯（Tsukimi Tsukikage）</title>
+  <link rel="stylesheet" href="css/taisho.css" />
+  <style>
+    :root{ --accent:#c7a449; --ink:#ededf2; --washi:#0e1420; }
+    html,body{ height:100%; }
+    body{ margin:0; color:#f3f6ff; background:
+      radial-gradient(1000px 600px at 70% -10%, #101828 0, #0e1420 40%, #0a0f18 75%),
+      linear-gradient(180deg, #0a0f18 0, #0e1420 100%);
+      background-attachment: fixed; }
+
+    /* 月と雲、ススキの情景 */
+    .moon{ position: fixed; right: 10%; top: 8%; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(64px 64px at 55% 45%, #fff7cc 0, #ffe99a 40%, #ffd86e 65%, #0000 66%); box-shadow: 0 0 60px #ffe99a66; }
+    .clouds{ position: fixed; inset: 0; pointer-events: none; opacity:.45; background:
+      radial-gradient(120px 40px at 70% 16%, #ffffff26 40%, #0000 42%) 0 0/420px 120px,
+      radial-gradient(200px 48px at 60% 12%, #ffffff1f 40%, #0000 42%) 40px 90px/640px 180px; filter: blur(0.5px); }
+    .susuki{ position: fixed; left: 6%; bottom: 4%; width: 240px; height: 180px; background:
+      linear-gradient(90deg, #ffffff88 0 2px, #0000 0) 10% 100%/2px 100% no-repeat,
+      linear-gradient(90deg, #ffffff55 0 2px, #0000 0) 20% 100%/2px 90% no-repeat,
+      linear-gradient(90deg, #ffffff33 0 2px, #0000 0) 30% 100%/2px 80% no-repeat; transform: skewX(-10deg); opacity:.35; }
+
+    .wrap{ max-width:1100px; margin:24px auto; padding:16px; }
+
+    .cat-icons{ display:flex; gap:10px; justify-content:center; margin-bottom:12px; }
+    .cat-icons button{ width:56px; height:56px; border-radius:14px; border:1px solid #54607a; background:linear-gradient(#131b2b,#0e1420); color:#d6deff; box-shadow:0 2px 10px rgba(0,0,0,.24); position:relative; cursor:pointer; }
+    .cat-icons button[aria-selected="true"]{ outline:2px solid var(--accent); box-shadow:0 0 0 2px #000 inset; }
+    .cat-icons .hint{ position:absolute; bottom:-26px; left:50%; transform:translateX(-50%); background:#0a0f18; color:#fff; font-size:12px; padding:3px 8px; border-radius:6px; white-space:nowrap; opacity:0; transition:.15s; }
+    .cat-icons button:hover .hint{ opacity:1; }
+
+    /* 掛け軸（夜の墨色と金の縁） */
+    .kakejiku{ background: #0f1522; border-radius:16px; border:1px solid #33405a; box-shadow: inset 0 0 0 1px #1a2233, 0 8px 24px rgba(0,0,0,.35); padding:18px 16px 24px; position:relative; overflow:hidden; }
+    .kakejiku::before, .kakejiku::after{ content:""; position:absolute; left:0; right:0; height:10px; background: repeating-linear-gradient(90deg,#2b3446 0 12px,#0000 12px 16px); opacity:.5; }
+    .kakejiku::before{ top:0; } .kakejiku::after{ bottom:0; }
+
+    .head{ text-align:center; margin-bottom:12px; }
+    .title{ font-family:"Hiragino Mincho ProN",serif; letter-spacing:.08em; color:#e8d07d; font-size:28px; text-shadow: 0 0 10px #e8d07d44; }
+    .subtitle{ color:#c9d3ee; font-size:13px; }
+
+    .timeline{ position:relative; margin:12px auto 0; max-width:860px; padding: 12px 6px 12px 24px; }
+    .tl-rail{ position:absolute; left:14px; top:0; bottom:0; width:3px; background: linear-gradient(#e0c46b,#f0e09f,#e0c46b); border-radius:2px; box-shadow: 0 0 0 6px #141b2a inset; }
+    .tl-item{ position:relative; display:grid; grid-template-columns: 18px 1fr; gap:10px; margin:18px 0; }
+    .tl-pin{ width:10px; height:10px; border-radius:50%; background:#e0c46b; box-shadow: 0 0 0 3px #2b3446; margin-top: 14px; }
+
+    /* 固定カード（恋の紅はそのまま） */
+    .tl-card{ background:#ffe9ea; border:3px solid #b84a4a; border-radius:14px; padding:12px 14px; box-shadow: 0 4px 10px rgba(0,0,0,.4); color:#2d2a26; }
+    .tl-h{ color:#6b1e24; font-weight:700; letter-spacing:.03em; }
+    .tl-summary{ color:#514b48; margin-top:6px; }
+    .tl-chips{ display:flex; gap:8px; margin-top:10px; }
+    .chip{ font-size:12px; color:#4f4946; background:#fff; border:1px solid #e3b5b5; border-radius:16px; padding:3px 8px; box-shadow:0 1px 0 #efd6d6 inset; }
+  </style>
+</head>
+<body>
+  <div class="moon" aria-hidden="true"></div>
+  <div class="clouds" aria-hidden="true"></div>
+  <div class="susuki" aria-hidden="true"></div>
+
+  <main class="wrap">
+    <nav class="cat-icons" aria-label="分野">
+      <button aria-selected="true"><span class="ico">🔢</span><span class="hint">数値・データ</span></button>
+      <button><span class="ico">💾</span><span class="hint">ハードウェア</span></button>
+      <button><span class="ico">🔄</span><span class="hint">アルゴリズム</span></button>
+      <button><span class="ico">🌐</span><span class="hint">Web</span></button>
+      <button><span class="ico">🔗</span><span class="hint">ネットワーク</span></button>
+      <button><span class="ico">🔐</span><span class="hint">セキュリティ</span></button>
+    </nav>
+
+    <section class="kakejiku" aria-labelledby="ttl">
+      <header class="head">
+        <h1 id="ttl" class="title">🔢 数値・データ</h1>
+        <p class="subtitle">宵の月灯り、静かに想いを照らす。夜風に、学びを結ぶ。</p>
+      </header>
+
+      <div class="timeline">
+        <div class="tl-rail" aria-hidden="true"></div>
+
+        <article class="tl-item">
+          <div class="tl-pin"></div>
+          <div class="tl-card">
+            <div class="tl-h">01 第1章：二進法の恋文</div>
+            <div class="tl-summary">0と1に想いを託す、恋文とビットの始まり。</div>
+            <div class="tl-chips"><span class="chip">第1話</span><span class="chip">学習 5〜8分</span></div>
+          </div>
+        </article>
+
+        <article class="tl-item">
+          <div class="tl-pin"></div>
+          <div class="tl-card">
+            <div class="tl-h">02 第2章：データ型の恋愛関係</div>
+            <div class="tl-summary">整数・実数・文字列…異なる型が紡ぐ想いの整理。</div>
+            <div class="tl-chips"><span class="chip">第2話</span><span class="chip">学習 5〜8分</span></div>
+          </div>
+        </article>
+
+        <article class="tl-item">
+          <div class="tl-pin"></div>
+          <div class="tl-card">
+            <div class="tl-h">03 第3章：進数変換の愛</div>
+            <div class="tl-summary">10/2/16進—表現の違いと本質の同一性。</div>
+            <div class="tl-chips"><span class="chip">第3話</span><span class="chip">学習 5〜8分</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

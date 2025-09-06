@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学習の間 - 冬 雪華（Fuyu Sekka）</title>
+  <link rel="stylesheet" href="css/taisho.css" />
+  <style>
+    :root{ --accent:#3a6ea5; --ink:#223042; --washi:#fbfbfd; }
+    html,body{ height:100%; }
+    body{ margin:0; background:
+      radial-gradient(1200px 580px at 50% -10%, #eef6ff 0, #f7fbff 40%, #ffffff 75%),
+      linear-gradient(180deg, #f7fbff 0, #ffffff 100%);
+      background-attachment: fixed; }
+
+    /* 雪華（六花）の儚いオーバーレイ */
+    .yuki{ position: fixed; inset: 0; pointer-events: none; opacity:.35; mix-blend-mode: screen; background:
+      radial-gradient( 2px 2px at 10% 20%, #a9c8ff 50%, #0000 52%) 0 0/80px 80px,
+      radial-gradient( 2px 2px at 30% 70%, #c2dbff 50%, #0000 52%) 20px 10px/120px 120px,
+      radial-gradient( 2px 2px at 80% 30%, #d2e6ff 50%, #0000 52%) 40px 30px/100px 100px; }
+
+    .wrap{ max-width:1100px; margin:24px auto; padding:16px; }
+
+    /* アイコンのみカテゴリナビ */
+    .cat-icons{ display:flex; gap:10px; justify-content:center; margin-bottom:12px; }
+    .cat-icons button{ width:56px; height:56px; border-radius:14px; border:1px solid #c8d6ea; background:linear-gradient(#f3f8ff,#fff); box-shadow:0 2px 10px rgba(0,0,0,.06); position:relative; cursor:pointer; }
+    .cat-icons button[aria-selected="true"]{ outline:2px solid var(--accent); background:#eff6ff; }
+    .cat-icons .hint{ position:absolute; bottom:-26px; left:50%; transform:translateX(-50%); background:#223042; color:#fff; font-size:12px; padding:3px 8px; border-radius:6px; white-space:nowrap; opacity:0; transition:.15s; }
+    .cat-icons button:hover .hint{ opacity:1; }
+
+    /* 掛け軸枠（霜の装い） */
+    .kakejiku{ background: var(--washi); border-radius:16px; border:1px solid #d8e6f5; box-shadow: inset 0 0 0 1px #e9f2fb, 0 8px 24px rgba(58,110,165,.12); padding:18px 16px 24px; position:relative; overflow:hidden; }
+    .kakejiku::before, .kakejiku::after{ content:""; position:absolute; left:0; right:0; height:10px; background: repeating-linear-gradient(90deg,#d9e7f6 0 12px,#0000 12px 16px); opacity:.6; }
+    .kakejiku::before{ top:0; } .kakejiku::after{ bottom:0; }
+
+    .head{ text-align:center; margin-bottom:12px; }
+    .title{ font-family:"Hiragino Mincho ProN",serif; letter-spacing:.08em; color:var(--accent); font-size:28px; }
+    .subtitle{ color:#4d6076; font-size:13px; }
+
+    /* タイムライン（固定カード表現） */
+    .timeline{ position:relative; margin:12px auto 0; max-width:860px; padding: 12px 6px 12px 24px; }
+    .tl-rail{ position:absolute; left:14px; top:0; bottom:0; width:3px; background: linear-gradient(#3470b6,#86b8ff,#3470b6); border-radius:2px; box-shadow: 0 0 0 6px #edf5ff inset; }
+    .tl-item{ position:relative; display:grid; grid-template-columns: 18px 1fr; gap:10px; margin:18px 0; }
+    .tl-pin{ width:10px; height:10px; border-radius:50%; background:#2e5d97; box-shadow: 0 0 0 3px #d9ecff; margin-top: 14px; }
+
+    /* カード（固定・恋の紅を残す） */
+    .tl-card{ background:#ffe9ea; border:3px solid #b84a4a; border-radius:14px; padding:12px 14px; box-shadow: 0 4px 10px rgba(0,0,0,.06); }
+    .tl-h{ color:#6b1e24; font-weight:700; letter-spacing:.03em; }
+    .tl-summary{ color:#5b5652; margin-top:6px; }
+    .tl-chips{ display:flex; gap:8px; margin-top:10px; }
+    .chip{ font-size:12px; color:#4f4946; background:#fff; border:1px solid #e3b5b5; border-radius:16px; padding:3px 8px; box-shadow:0 1px 0 #efd6d6 inset; }
+  </style>
+</head>
+<body>
+  <div class="yuki" aria-hidden="true"></div>
+  <main class="wrap">
+    <nav class="cat-icons" aria-label="分野">
+      <button aria-selected="true"><span class="ico">🔢</span><span class="hint">数値・データ</span></button>
+      <button><span class="ico">💾</span><span class="hint">ハードウェア</span></button>
+      <button><span class="ico">🔄</span><span class="hint">アルゴリズム</span></button>
+      <button><span class="ico">🌐</span><span class="hint">Web</span></button>
+      <button><span class="ico">🔗</span><span class="hint">ネットワーク</span></button>
+      <button><span class="ico">🔐</span><span class="hint">セキュリティ</span></button>
+    </nav>
+
+    <section class="kakejiku" aria-labelledby="ttl">
+      <header class="head">
+        <h1 id="ttl" class="title">🔢 数値・データ</h1>
+        <p class="subtitle">静けさに降り積もる想い。雪の白に、学びを刻む。</p>
+      </header>
+
+      <div class="timeline">
+        <div class="tl-rail" aria-hidden="true"></div>
+
+        <article class="tl-item">
+          <div class="tl-pin"></div>
+          <div class="tl-card">
+            <div class="tl-h">01 第1章：二進法の恋文</div>
+            <div class="tl-summary">0と1に想いを託す、恋文とビットの始まり。</div>
+            <div class="tl-chips"><span class="chip">第1話</span><span class="chip">学習 5〜8分</span></div>
+          </div>
+        </article>
+
+        <article class="tl-item">
+          <div class="tl-pin"></div>
+          <div class="tl-card">
+            <div class="tl-h">02 第2章：データ型の恋愛関係</div>
+            <div class="tl-summary">整数・実数・文字列…異なる型が紡ぐ想いの整理。</div>
+            <div class="tl-chips"><span class="chip">第2話</span><span class="chip">学習 5〜8分</span></div>
+          </div>
+        </article>
+
+        <article class="tl-item">
+          <div class="tl-pin"></div>
+          <div class="tl-card">
+            <div class="tl-h">03 第3章：進数変換の愛</div>
+            <div class="tl-summary">10/2/16進—表現の違いと本質の同一性。</div>
+            <div class="tl-chips"><span class="chip">第3話</span><span class="chip">学習 5〜8分</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

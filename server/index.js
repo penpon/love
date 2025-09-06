@@ -211,6 +211,9 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
     if (!room) return;
     
+    if (!room.learningState) {
+      room.learningState = { currentCategory: 'menu', scrollPosition: {}, isActive: false, selectedStory: {} };
+    }
     room.learningState.currentCategory = category;
     room.learningState.isActive = true;
     
@@ -230,6 +233,8 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
     if (!room) return;
     
+    if (!room.learningState) room.learningState = { currentCategory: 'menu', scrollPosition: {}, isActive: false, selectedStory: {} };
+    if (!room.learningState.scrollPosition) room.learningState.scrollPosition = {};
     room.learningState.scrollPosition[category] = scrollTop;
     
     // 他のプレイヤー（Guest）に同期
@@ -247,6 +252,7 @@ io.on('connection', (socket) => {
 
     try {
       // 状態更新
+      if (!room.learningState) room.learningState = { currentCategory: 'menu', scrollPosition: {}, isActive: false, selectedStory: {} };
       room.learningState.currentCategory = category || room.learningState.currentCategory || 'menu';
       if (!room.learningState.selectedStory) room.learningState.selectedStory = {};
       if (category && chapterId != null) {
@@ -356,13 +362,38 @@ io.on('connection', (socket) => {
           id: roomId,
           players: [],
           mode: null,
-          createdAt: Date.now()
+          createdAt: Date.now(),
+          quizState: {
+            isActive: false,
+            currentQuestion: null,
+            scores: {},
+            round: 0
+          },
+          learningState: {
+            currentCategory: 'menu',
+            scrollPosition: {},
+            isActive: false,
+            selectedStory: {}
+          }
         };
         rooms.set(roomId, room);
       } else {
         socket.emit('room_not_found');
         return;
       }
+    }
+    
+    // ルーム状態の必須プロパティを補完（後方互換・復旧時対策）
+    if (!room.quizState) {
+      room.quizState = { isActive: false, currentQuestion: null, scores: {}, round: 0 };
+    } else if (!room.quizState.scores) {
+      room.quizState.scores = {};
+    }
+    if (!room.learningState) {
+      room.learningState = { currentCategory: 'menu', scrollPosition: {}, isActive: false, selectedStory: {} };
+    } else {
+      if (!room.learningState.scrollPosition) room.learningState.scrollPosition = {};
+      if (!room.learningState.selectedStory) room.learningState.selectedStory = {};
     }
     
     // ロビー→モード選択の遷移中であれば、猶予フラグを解除
@@ -444,6 +475,14 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
     if (!room) return;
     
+    if (!room.learningState) {
+      room.learningState = {
+        currentCategory: 'menu',
+        scrollPosition: {},
+        isActive: false,
+        selectedStory: {}
+      };
+    }
     room.learningState.isActive = true;
     room.learningState.currentCategory = 'menu';
     
@@ -466,6 +505,9 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
     if (!room) return;
     
+    if (!room.quizState) {
+      room.quizState = { isActive: false, currentQuestion: null, scores: {}, round: 0 };
+    }
     room.quizState.isActive = true;
     
     console.log(`Owner ${socket.playerName} がクイズモードを選択しました (ルーム: ${roomId})`);

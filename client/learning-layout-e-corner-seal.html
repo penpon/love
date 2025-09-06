@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学習の間 - レイアウトE（角印ラベル）</title>
+  <link rel="stylesheet" href="css/taisho.css" />
+  <style>
+    /* 重複排除: 上部グローバルナビのテキストは隠す（アイコンのみ） */
+    .wa-learning-nav .wa-nav-text{ display:none; }
+
+    /* story-selector 既存デザイン踏襲 */
+    #story-selector .c-nav { display:flex; gap: var(--spacing-sm); flex-wrap: wrap; justify-content: center; margin-bottom: var(--spacing-lg); }
+    #story-selector .c-scroll { background: var(--gradient-washi); border:2px solid var(--ai); border-radius: var(--border-radius-large); padding: var(--spacing-xl); position: relative; overflow: hidden; }
+    #story-selector .c-scroll::before, #story-selector .c-scroll::after { content:''; position:absolute; left: 0; right: 0; height: 12px; background: repeating-linear-gradient(90deg, rgba(178,45,53,.15) 0 12px, transparent 12px 24px); }
+    #story-selector .c-scroll::before { top:0; } #story-selector .c-scroll::after { bottom:0; }
+    #story-selector .c-timeline { position: relative; margin: var(--spacing-xl) auto; max-width: 980px; }
+    #story-selector .c-timeline::before { content:''; position:absolute; left: 20px; top:0; bottom:0; width: 4px; background: linear-gradient(180deg, var(--enjhi), var(--yamabuki)); border-radius: 2px; }
+    #story-selector .c-node{ position:relative; display:grid; grid-template-columns: 60px 1fr; gap: var(--spacing-md); margin-bottom: var(--spacing-xl); align-items: start; }
+    #story-selector .c-pin{ width: 18px; height: 18px; border-radius: 50%; background: var(--enjhi); border: 3px solid var(--washi); box-shadow: var(--shadow-soft); position: relative; left: 12px; top: 6px; }
+    #story-selector .c-card{ background: var(--gradient-sakura); border:2px solid var(--enjhi); border-radius: var(--border-radius); padding: var(--spacing-lg); box-shadow: var(--shadow-soft); cursor: pointer; transition: transform .2s ease; }
+    #story-selector .c-card:hover{ transform: translateY(-3px); }
+    #story-selector .c-title{ font-family: var(--font-accent); color: var(--enjhi); font-weight: 800; }
+    #story-selector .c-sub{ color: var(--ai); font-size: .95rem; margin-top: 6px; }
+    #story-selector .c-meta{ display:flex; gap:6px; flex-wrap:wrap; margin-top: 8px; }
+    #story-selector .c-chip{ background: rgba(22,94,131,.08); color: var(--ai); border:1px solid rgba(22,94,131,.2); border-radius: 999px; padding: 2px 8px; font-size: .8rem; }
+    #story-selector .c-hidden{ display:none; }
+
+    /* E案: 角印ラベル（右上）— カテゴリ名はここ1箇所のみ */
+    .corner-seal{ position: absolute; right: 14px; top: 14px; display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 2px solid var(--enjhi); color: var(--enjhi); border-radius: 999px; padding: 6px 12px; font-family: var(--font-accent); font-weight: 800; box-shadow: var(--shadow-soft); }
+    .corner-seal .dot{ width: 8px; height: 8px; border-radius: 50%; background: var(--yamabuki); }
+
+    /* c-nav はアイコンのみ（aria-labelで補完） */
+    #story-selector .c-nav .wa-nav-item .txt{ display:none; }
+  </style>
+</head>
+<body>
+  <main class="washi-container wa-fade-in">
+    <header class="wa-header">
+      <h1 class="wa-title">学習の間</h1>
+      <p class="wa-subtitle">CS雅学の間 - 大正ロマンで学ぶコンピューターサイエンス</p>
+      <div class="wa-divider"></div>
+    </header>
+
+    <nav class="wa-learning-nav">
+      <div class="wa-nav-item active" data-category="numbers" aria-label="数値・データ"><span class="wa-nav-icon">🔢</span><span class="wa-nav-text">数値・データ</span></div>
+      <div class="wa-nav-item" data-category="hardware" aria-label="ハードウェア"><span class="wa-nav-icon">💾</span><span class="wa-nav-text">ハードウェア</span></div>
+      <div class="wa-nav-item" data-category="algorithms" aria-label="アルゴリズム"><span class="wa-nav-icon">🔄</span><span class="wa-nav-text">アルゴリズム</span></div>
+      <div class="wa-nav-item" data-category="web" aria-label="Web 技術"><span class="wa-nav-icon">🌐</span><span class="wa-nav-text">Web技術</span></div>
+      <div class="wa-nav-item" data-category="network" aria-label="ネットワーク"><span class="wa-nav-icon">🔗</span><span class="wa-nav-text">ネットワーク</span></div>
+      <div class="wa-nav-item" data-category="security" aria-label="セキュリティ"><span class="wa-nav-icon">🔐</span><span class="wa-nav-text">セキュリティ</span></div>
+    </nav>
+
+    <section id="story-selector" class="wa-fade-in" aria-label="物語選択">
+      <div class="c-nav" id="catTabs">
+        <div class="wa-nav-item active" data-cat="numbers" aria-label="数値・データ">🔢 <span class="txt">数値・データ</span></div>
+        <div class="wa-nav-item" data-cat="hardware" aria-label="ハードウェア">💾 <span class="txt">ハードウェア</span></div>
+        <div class="wa-nav-item" data-cat="algorithms" aria-label="アルゴリズム">🔄 <span class="txt">アルゴリズム</span></div>
+        <div class="wa-nav-item" data-cat="web" aria-label="Web 技術">🌐 <span class="txt">Web</span></div>
+        <div class="wa-nav-item" data-cat="network" aria-label="ネットワーク">🔗 <span class="txt">ネットワーク</span></div>
+        <div class="wa-nav-item" data-cat="security" aria-label="セキュリティ">🔐 <span class="txt">セキュリティ</span></div>
+      </div>
+
+      <div class="c-scroll">
+        <!-- カテゴリ名はここだけ（角印ラベル） -->
+        <div class="corner-seal"><span class="dot" aria-hidden="true"></span><span id="onlyCategory">🔢 数値・データ</span></div>
+
+        <div id="tl-numbers" class="c-timeline"></div>
+        <div id="tl-hardware" class="c-timeline c-hidden"></div>
+        <div id="tl-algorithms" class="c-timeline c-hidden"></div>
+        <div id="tl-web" class="c-timeline c-hidden"></div>
+        <div id="tl-network" class="c-timeline c-hidden"></div>
+        <div id="tl-security" class="c-timeline c-hidden"></div>
+      </div>
+
+      <script>
+        const TL_DATA_FALLBACK = {
+          hardware: ['機械式計算機の恋','真空管の灯り','トランジスタの鼓動'],
+          algorithms: ['探索は君を探して','ソートのダンス','動的計画の手紙'],
+          web: ['HTMLの恋文','CSSの彩り','JavaScriptの告白'],
+          network: ['TCPの握手','DNSの名付け','ルーティングの旅'],
+          security: ['暗号の指輪','公開鍵の約束','ハッシュの封印']
+        };
+        const STORIES = { numbers:null, hardware:null, algorithms:null, web:null, network:null, security:null };
+
+        function renderTimeline(rootId, items, catKey){
+          const root = document.getElementById(rootId);
+          if(!root) return;
+          root.innerHTML = '';
+          items.forEach(it=>{
+            const node = document.createElement('div');
+            node.className = 'c-node';
+            node.innerHTML = `
+              <div class='c-pin'></div>
+              <div class='c-card wa-pulse' data-story-title="${it.title}" data-cat="${catKey}" data-ep="${it.ep}">
+                <div class='c-title'>${it.icon ? `<span style=\"margin-right:6px;\">${it.icon}</span>` : ''}${it.title}</div>
+                <div class='c-sub'>${it.summary || '短いあらすじがここに入ります。'}</div>
+                <div class='c-meta'>
+                  <span class='c-chip'>第${it.ep}話</span>
+                  <span class='c-chip'>学習 5〜8分</span>
+                </div>
+              </div>`;
+            root.appendChild(node);
+          });
+        }
+
+        async function loadNumbers(){
+          try{
+            const res = await fetch('/data/stories/01_numbers.json');
+            if(!res.ok) throw new Error('not found');
+            const json = await res.json();
+            STORIES.numbers = json;
+            const items = (json.chapters||[]).map(ch=>({ ep: ch.id, title: `第${ch.id}章：${ch.title}`, icon: ch.icon||'', summary: ch.summary||'' }));
+            renderTimeline('tl-numbers', items, 'numbers');
+          }catch(e){
+            const items = [
+              { ep:1, title:'第一章：二進法の恋文'},
+              { ep:2, title:'第二章：データ型の恋愛関係'},
+              { ep:3, title:'第三章：進数変換の愛'}
+            ];
+            renderTimeline('tl-numbers', items, 'numbers');
+          }
+        }
+
+        async function loadCategory(cat, path){
+          try{
+            const res = await fetch(path); if(!res.ok) throw new Error('404');
+            const json = await res.json(); STORIES[cat]=json;
+            const items = (json.chapters||[]).map(ch=>({ ep: ch.id, title:`第${ch.id}章：${ch.title}`, icon: ch.icon||'', summary: ch.summary||'' }));
+            renderTimeline('tl-'+cat, items, cat);
+          }catch(e){
+            const items = (TL_DATA_FALLBACK[cat]||[]).map((t,i)=>({ ep:i+1, title:t }));
+            renderTimeline('tl-'+cat, items, cat);
+          }
+        }
+
+        const LABELS = {
+          numbers: '🔢 数値・データ',
+          hardware: '💾 ハードウェア',
+          algorithms: '🔄 アルゴリズム',
+          web: '🌐 Web技術',
+          network: '🔗 ネットワーク',
+          security: '🔐 セキュリティ'
+        };
+
+        function switchCategory(key){
+          document.querySelectorAll('#story-selector .c-nav .wa-nav-item').forEach(b=>b.classList.remove('active'));
+          const tab = document.querySelector(`#story-selector .c-nav .wa-nav-item[data-cat="${key}"]`);
+          if(tab) tab.classList.add('active');
+          document.querySelectorAll('#story-selector .c-timeline').forEach(el=>el.classList.add('c-hidden'));
+          const tl = document.getElementById('tl-'+key); if(tl) tl.classList.remove('c-hidden');
+          document.getElementById('onlyCategory').textContent = LABELS[key] || '';
+        }
+
+        document.getElementById('catTabs').addEventListener('click', (e)=>{
+          const tab = e.target.closest('.wa-nav-item'); if(!tab) return;
+          switchCategory(tab.dataset.cat);
+        });
+
+        (async function init(){
+          await Promise.all([
+            loadNumbers(),
+            loadCategory('hardware','/data/stories/02_hardware.json'),
+            loadCategory('algorithms','/data/stories/03_algorithms.json'),
+            loadCategory('web','/data/stories/04_web.json'),
+            loadCategory('network','/data/stories/05_network.json'),
+            loadCategory('security','/data/stories/06_security.json')
+          ]);
+          switchCategory('numbers');
+        })();
+      </script>
+    </section>
+  </main>
+</body>
+</html>

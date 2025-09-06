@@ -1,0 +1,33 @@
+{
+  "category": "ネットワーク",
+  "categoryId": "network",
+  "icon": "🔗",
+  "description": "宛先・道順・層・信頼性など、世界と世界を結ぶ『道』をやさしく学ぶ",
+  "totalChapters": 15,
+  "estimatedReadingTime": "45-60分",
+  "difficulty": "初級",
+  "prerequisites": ["数値とデータの基礎", "ハードウェア", "Web基盤技術"],
+  "learningObjectives": [
+    "IP/ポート・層モデルの基礎を理解する",
+    "TCP/UDPの違いと用途を説明できる",
+    "DNS/ルーティング/ARP/MTU/帯域/遅延の勘所を掴む",
+    "NATや輻輳・フロー制御の全体像を把握する"
+  ],
+  "chapters": [
+    { "id": 1,  "title": "宛先の数字",       "icon": "01", "summary": "IPアドレス—世界の住所",                "file": "./01.json" },
+    { "id": 2,  "title": "段の仕事",         "icon": "02", "summary": "層モデル—役目で分ける",                "file": "./02.json" },
+    { "id": 3,  "title": "握手の合図",       "icon": "03", "summary": "TCP—確かに届くために",                  "file": "./03.json" },
+    { "id": 4,  "title": "軽やかな便り",     "icon": "04", "summary": "UDP—軽く速く、確約なし",                  "file": "./04.json" },
+    { "id": 5,  "title": "名から番号へ",     "icon": "05", "summary": "DNS—名を数字へ解く",                     "file": "./05.json" },
+    { "id": 6,  "title": "近所の手渡し",     "icon": "06", "summary": "ARP—同じ町内での引き渡し",              "file": "./06.json" },
+    { "id": 7,  "title": "道を選ぶ",         "icon": "07", "summary": "ルーティング—次の辻へ渡す",             "file": "./07.json" },
+    { "id": 8,  "title": "幅と待ち",         "icon": "08", "summary": "帯域と遅延—速さの二つの顔",             "file": "./08.json" },
+    { "id": 9,  "title": "一度に運ぶ大きさ", "icon": "09", "summary": "MTUと分割—包みの寸法",                 "file": "./09.json" },
+    { "id": 10, "title": "混み合いの捌き",   "icon": "10", "summary": "輻輳制御—混雑に合わせる",               "file": "./10.json" },
+    { "id": 11, "title": "窓をひらく",       "icon": "11", "summary": "フロー制御—やり取りの歩幅",             "file": "./11.json" },
+    { "id": 12, "title": "境の向こう",       "icon": "12", "summary": "NAT—内と外の橋渡し",                   "file": "./12.json" },
+    { "id": 13, "title": "生きてる証",       "icon": "13", "summary": "TTL—回り続けないために",               "file": "./13.json" },
+    { "id": 14, "title": "途中の蔵",         "icon": "14", "summary": "CDN—近くから届ける",                    "file": "./14.json" },
+    { "id": 15, "title": "道は続く",         "icon": "15", "summary": "振り返り—安全の章へ",                    "file": "./15.json" }
+  ]
+}

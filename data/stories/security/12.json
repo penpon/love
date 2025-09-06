@@ -1,0 +1,16 @@
+{
+  "id": 12,
+  "title": "境の掟",
+  "icon": "12",
+  "summary": "セキュリティヘッダ/CSP—挙動を縛る",
+  "story": [
+    "見知らぬ者が勝手に張り紙を書き換えぬよう、紬は掲示場の掟を立てた。",
+    "外の墨や札は持ち込ませず、決められた棚からのみ札を取る――掟を札に書き、入口で示す。",
+    "Webでも同じで、セキュリティヘッダやCSPが『外からのスクリプト』や『危うい挙動』を縛り、被害の広がりを防ぐ。"
+  ],
+  "poem": {"title": "掟の歌","lines": ["掟立て","外の札はばみ","心得よ","許す筋より","のみ振る舞え"]},
+  "keyPoints": [
+    { "term": "Security Headers", "definition": "X-Frame-Options, X-Content-Type-Options, Referrer-Policy 等で危険挙動を抑制" },
+    { "term": "CSP(Content-Security-Policy)", "definition": "読み込める資源の由来や挙動を宣言で制限する" }
+  ]
+}

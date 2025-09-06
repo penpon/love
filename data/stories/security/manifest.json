@@ -1,0 +1,32 @@
+{
+  "category": "セキュリティ",
+  "categoryId": "security",
+  "icon": "🔐",
+  "description": "機密・完全・可用の三本柱から、Webの実務で必要な守りの基礎を学ぶ",
+  "totalChapters": 15,
+  "estimatedReadingTime": "45-60分",
+  "difficulty": "初級",
+  "prerequisites": ["Web基盤技術", "ネットワーク"],
+  "learningObjectives": [
+    "CIA（三要素）とHTTPS/TLSの目的を説明できる",
+    "基本的なWeb脆弱性（XSS/CSRF/SQLi）への初歩的対策を理解する",
+    "パスワードの保管、セッション管理、認証/認可の違いを説明できる"
+  ],
+  "chapters": [
+    { "id": 1,  "title": "三本柱の鍵",      "icon": "01", "summary": "機密性・完全性・可用性—守りの設計図",               "file": "./01.json" },
+    { "id": 2,  "title": "封と印",          "icon": "02", "summary": "HTTPS/TLS—暗号・改ざん検出・認証",                 "file": "./02.json" },
+    { "id": 3,  "title": "悪意の書き込み",  "icon": "03", "summary": "XSS—出力エスケープの基本",                         "file": "./03.json" },
+    { "id": 4,  "title": "すり替えの書付",  "icon": "04", "summary": "CSRF—トークンとSameSite",                           "file": "./04.json" },
+    { "id": 5,  "title": "秘密の扱い",      "icon": "05", "summary": "パスワード—ソルト付きストレッチングハッシュ",     "file": "./05.json" },
+    { "id": 6,  "title": "穴を塞ぐ",        "icon": "06", "summary": "SQLインジェクション—プリペアドステートメント",     "file": "./06.json" },
+    { "id": 7,  "title": "札の取り替え",    "icon": "07", "summary": "セッション固定対策—IDローテーション",              "file": "./07.json" },
+    { "id": 8,  "title": "誰と何を",        "icon": "08", "summary": "認証と認可—本人確認と権限付与",                     "file": "./08.json" },
+    { "id": 9,  "title": "印と封の違い",    "icon": "09", "summary": "ハッシュと暗号—復号の有無",                         "file": "./09.json" },
+    { "id": 10, "title": "署名の約束",      "icon": "10", "summary": "公開鍵・デジタル署名—誰の印か",                     "file": "./10.json" },
+    { "id": 11, "title": "秘すれば花",      "icon": "11", "summary": "秘密情報の管理—鍵と設定の置き場",                   "file": "./11.json" },
+    { "id": 12, "title": "境の掟",          "icon": "12", "summary": "セキュリティヘッダ/CSP—挙動を縛る",                 "file": "./12.json" },
+    { "id": 13, "title": "見張りと記録",    "icon": "13", "summary": "ログ/監視/検知—兆しを逃さない",                    "file": "./13.json" },
+    { "id": 14, "title": "備えと復元",      "icon": "14", "summary": "バックアップ/DR—壊れても立ち上がる",               "file": "./14.json" },
+    { "id": 15, "title": "守りの誓い",      "icon": "15", "summary": "振り返り—より強い絆へ",                             "file": "./15.json" }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": 9,
+  "title": "作法ある呼び方",
+  "icon": "09",
+  "summary": "REST—資源と動詞で通じ合う",
+  "story": [
+    "紬は見本帳を『品（resource）』と呼び、取り扱いを四つの動詞で決めた。",
+    "見る(GET)、載せる(POST)、差し替える(PUT/PATCH)、片付ける(DELETE)。",
+    "作法を合わせれば、異国の商館とも無言で通じる—それがREST。"
+  ],
+  "poem": {"title": "作法の歌","lines": ["品ごとに","動詞を添えて","呼びかける","作法揃えば","遠くも通ず"]},
+  "keyPoints": [
+    { "term": "REST", "definition": "資源をURLで表し、HTTP動詞で操作する考え方" },
+    { "term": "メソッド", "definition": "GET/POST/PUT/PATCH/DELETE 等の用途" }
+  ]
+}

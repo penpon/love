@@ -1,0 +1,32 @@
+{
+  "category": "データ構造・アルゴリズム",
+  "categoryId": "algorithms",
+  "icon": "🔄",
+  "description": "探索・整列・再帰・計算量・基本データ構造を、大正の恋物語でやさしく学ぶ",
+  "totalChapters": 15,
+  "estimatedReadingTime": "45-60分",
+  "difficulty": "初級",
+  "prerequisites": ["数値とデータの基礎"],
+  "learningObjectives": [
+    "探索・整列・再帰・動的計画法の入門を理解する",
+    "ビッグオー記法で概算の計算量を見積もれる",
+    "配列/連想/スタック/キュー/木/グラフの基礎を把握する"
+  ],
+  "chapters": [
+    { "id": 1,  "title": "心に描く手順",      "icon": "01", "summary": "アルゴリズムとは—手順を言葉に",                "file": "./01.json" },
+    { "id": 2,  "title": "並べ替えの初歩",    "icon": "02", "summary": "バブルソートと安定性",                           "file": "./02.json" },
+    { "id": 3,  "title": "探し物の勘所",      "icon": "03", "summary": "線形探索と二分探索—整列が鍵",                     "file": "./03.json" },
+    { "id": 4,  "title": "差し込む技",        "icon": "04", "summary": "挿入ソート—ほぼ整列に強い",                      "file": "./04.json" },
+    { "id": 5,  "title": "手分けの知恵",      "icon": "05", "summary": "選択ソートと“安定”の話",                          "file": "./05.json" },
+    { "id": 6,  "title": "割ってつなぐ",      "icon": "06", "summary": "マージソート—分割統治のはじめ",                   "file": "./06.json" },
+    { "id": 7,  "title": "切って試す",        "icon": "07", "summary": "クイックソート—平均は速くても",                   "file": "./07.json" },
+    { "id": 8,  "title": "繰り返す形",        "icon": "08", "summary": "再帰と停止条件—鏡のように",                        "file": "./08.json" },
+    { "id": 9,  "title": "小さな控え",        "icon": "09", "summary": "メモ化と動的計画法—過去を記す",                    "file": "./09.json" },
+    { "id": 10, "title": "量の見積もり",      "icon": "10", "summary": "ビッグオー記法—概算の感覚",                        "file": "./10.json" },
+    { "id": 11, "title": "並びの道具",        "icon": "11", "summary": "スタックとキュー—順番の作法",                      "file": "./11.json" },
+    { "id": 12, "title": "名で探す",          "icon": "12", "summary": "ハッシュ—名札で素早く",                            "file": "./12.json" },
+    { "id": 13, "title": "木の小径",          "icon": "13", "summary": "木と二分探索木—枝分かれの地図",                    "file": "./13.json" },
+    { "id": 14, "title": "広がる路・深まる路", "icon": "14", "summary": "BFS/DFS—層ごとか奥へか",                           "file": "./14.json" },
+    { "id": 15, "title": "恋と計算の約束",    "icon": "15", "summary": "正しさ・テスト・境界—続く物語へ",                  "file": "./15.json" }
+  ]
+}

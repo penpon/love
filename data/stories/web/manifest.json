@@ -1,0 +1,33 @@
+{
+  "category": "Web基盤技術",
+  "categoryId": "web",
+  "icon": "🌐",
+  "description": "HTML/CSS/JS と HTTP・REST を、大正の恋物語に重ねてやさしく学ぶ",
+  "totalChapters": 15,
+  "estimatedReadingTime": "45-60分",
+  "difficulty": "初級",
+  "prerequisites": ["数値とデータの基礎", "ハードウェア"],
+  "learningObjectives": [
+    "HTML/CSS/JS の役割を区別できる",
+    "HTTPの基本（リクエスト/レスポンス・メソッド・ステータス）を理解する",
+    "Cookie/セッションとキャッシュの基礎を掴む",
+    "RESTの考え方を体験的に理解する"
+  ],
+  "chapters": [
+    { "id": 1,  "title": "頁の骨組",        "icon": "01", "summary": "HTML—文の構造を定める",                    "file": "./01.json" },
+    { "id": 2,  "title": "彩りの衣",        "icon": "02", "summary": "CSS—装いを与える",                           "file": "./02.json" },
+    { "id": 3,  "title": "所作の力",        "icon": "03", "summary": "JavaScript—動きを添える",                    "file": "./03.json" },
+    { "id": 4,  "title": "往復の手紙",      "icon": "04", "summary": "HTTP—要求と応答の作法",                      "file": "./04.json" },
+    { "id": 5,  "title": "住所と道しるべ",  "icon": "05", "summary": "URL—道筋の表し方（パス/クエリ）",            "file": "./05.json" },
+    { "id": 6,  "title": "旗を渡す",        "icon": "06", "summary": "Cookie—小さな札で常連を識別",                "file": "./06.json" },
+    { "id": 7,  "title": "札でつなぐ",      "icon": "07", "summary": "セッション—継続の仕組み",                   "file": "./07.json" },
+    { "id": 8,  "title": "文の差出人",      "icon": "08", "summary": "フォーム—入力を整えて届ける",               "file": "./08.json" },
+    { "id": 9,  "title": "作法ある呼び方",  "icon": "09", "summary": "REST—資源と動詞で通じ合う",                  "file": "./09.json" },
+    { "id": 10, "title": "一枚の頁",        "icon": "10", "summary": "SPA—差し替えで軽やかに",                   "file": "./10.json" },
+    { "id": 11, "title": "蓄えの知恵",      "icon": "11", "summary": "キャッシュ—待ち時間を減らす",               "file": "./11.json" },
+    { "id": 12, "title": "印で見分ける",    "icon": "12", "summary": "ETag—変わらぬ頁は運ばぬ",                   "file": "./12.json" },
+    { "id": 13, "title": "関所の作法",      "icon": "13", "summary": "CORS—境を越える礼儀",                      "file": "./13.json" },
+    { "id": 14, "title": "誰もが読める頁",  "icon": "14", "summary": "アクセシビリティ—やさしい設計",             "file": "./14.json" },
+    { "id": 15, "title": "繋ぐWebへ",       "icon": "15", "summary": "学びの振り返りと次章（ネットワーク）へ",     "file": "./15.json" }
+  ]
+}

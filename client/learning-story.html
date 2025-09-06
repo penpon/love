@@ -145,19 +145,42 @@
     let CURRENT_CHAPTERS = [];     // 章（=話）メタ配列
     let CURRENT_INDEX = -1;        // 現在インデックス
     const CHAPTER_CACHE = new Map(); // 章ファイルのキャッシュ（manifest方式）
+    
+    // タイピングエフェクトの状態とキャンセル関数
+    const TYPEWRITER_STATE = { timer: null, element: null, fullText: '', onDone: null, active: false };
+    function cancelTypewriterEffect(reveal = true) {
+      const s = TYPEWRITER_STATE;
+      if (s.timer) { clearInterval(s.timer); s.timer = null; }
+      if (reveal && s.element && typeof s.fullText === 'string') {
+        s.element.innerHTML = s.fullText;
+      }
+      const cb = s.onDone;
+      s.active = false; s.element = null; s.fullText = ''; s.onDone = null;
+      if (typeof cb === 'function') { try { cb(); } catch (e) {} }
+    }
 
     function typewriterEffect(element, onDone) {
       element.classList.add('typed');
       const text = element.innerHTML;
       element.innerHTML = '';
       element.style.visibility = 'visible';
+      // 既存のタイピングを中断してから開始
+      cancelTypewriterEffect(false);
       let index = 0;
-      const timer = setInterval(() => {
+      TYPEWRITER_STATE.element = element;
+      TYPEWRITER_STATE.fullText = text;
+      TYPEWRITER_STATE.onDone = onDone;
+      TYPEWRITER_STATE.active = true;
+      TYPEWRITER_STATE.timer = setInterval(() => {
         element.innerHTML = text.substring(0, index);
         index++;
         if (index > text.length) {
-          clearInterval(timer);
-          if (typeof onDone === 'function') onDone();
+          clearInterval(TYPEWRITER_STATE.timer);
+          TYPEWRITER_STATE.timer = null;
+          TYPEWRITER_STATE.active = false;
+          const cb = TYPEWRITER_STATE.onDone;
+          TYPEWRITER_STATE.element = null; TYPEWRITER_STATE.fullText = ''; TYPEWRITER_STATE.onDone = null;
+          if (typeof cb === 'function') cb();
         }
       }, 30);
     }
@@ -193,6 +216,9 @@
     async function loadStory(nextCategory = null, nextChapterId = null) {
       if (nextCategory) category = nextCategory;
       if (nextChapterId != null) chapterId = parseInt(nextChapterId, 10);
+
+      // 進行中のタイピングは中断してから読み込みを行う
+      if (typeof cancelTypewriterEffect === 'function') cancelTypewriterEffect(false);
 
       const resInfo = getCategoryResource(category);
       if (!resInfo) {
@@ -513,12 +539,14 @@
         if (prevBtn) { prevBtn.disabled = true; prevBtn.title = '主催者のみ操作できます'; }
         if (nextBtn) { nextBtn.disabled = true; nextBtn.title = '主催者のみ操作できます'; }
       } else {
-        if (prevBtn) prevBtn.addEventListener('click', () => goChapter(-1));
-        if (nextBtn) nextBtn.addEventListener('click', () => goChapter(1));
+        if (prevBtn) prevBtn.addEventListener('click', () => { cancelTypewriterEffect(false); goChapter(-1); });
+        if (nextBtn) nextBtn.addEventListener('click', () => { cancelTypewriterEffect(false); goChapter(1); });
       }
 
       // Ownerが「目次へ戻る」を押したら、カテゴリ変更を同期してから遷移
       const backA = document.getElementById('backLink');
+      // どの役割でも、クリック時にタイピングを即座にキャンセルして操作を通す
+      if (backA) { backA.addEventListener('click', () => cancelTypewriterEffect(false), { capture: true }); }
       if (backA && userRole === 'owner') {
         backA.addEventListener('click', (ev) => {
           try {

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/taisho.css" />
   <script src="/socket.io/socket.io.js"></script>
   <script src="js/socket.js"></script>
+  <script src="js/toast.js"></script>
 </head>
 <body>
   <div class="seasonal-decoration" id="seasonalDecoration"></div>
@@ -403,8 +404,20 @@
 
     // Quiz/ホーム遷移（learning.html と統一）
     function goToQuiz() {
+      try {
+        // Ownerの場合はサーバーへモード選択を通知してGuestも追従させる
+        if (userRole === 'owner' && roomId) {
+          const sock = window.__learningSocketStory || (window.__learningSocketStory = io());
+          sock.emit('select_quiz_mode', { roomId });
+        }
+      } catch (e) {}
+      if (typeof showSakuraToast === 'function') {
+        showSakuraToast('クイズモードへ移動します…', 1000, 'クイズへ移動', '⚔️');
+      }
       if (roomId && playerName) {
-        window.location.href = `matching.html?roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&role=${encodeURIComponent(userRole)}`;
+        setTimeout(() => {
+          window.location.href = `matching.html?roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&role=${encodeURIComponent(userRole)}`;
+        }, 1000);
       } else {
         alert('クイズに挑戦するには、ルーム情報が必要です。');
         window.location.href = 'index.html';
@@ -454,6 +467,20 @@
             loadStory(category, chapterId);
           }
         });
+        // カテゴリ変更の同期（Ownerが目次に戻ったケースなど）
+        sock.on('learning_category_changed', ({ category: cat }) => {
+          if (!cat) return;
+          const params = new URLSearchParams({ category: cat });
+          if (roomId) params.set('roomId', roomId);
+          if (playerName) params.set('playerName', playerName);
+          if (userRole) params.set('role', userRole);
+          if (typeof showSakuraToast === 'function') {
+            const map = {numbers:'数値・データ',hardware:'ハードウェア',algorithms:'アルゴリズム',web:'Web技術',network:'ネットワーク',security:'セキュリティ'};
+            const label = map[cat] || cat;
+            showSakuraToast(`主催者が「${label}」に戻りました。`, 900, '目次へ移動', '📜');
+          }
+          setTimeout(() => { window.location.href = `learning.html?${params.toString()}`; }, 900);
+        });
         // スクロール同期（Guest反映）
         sock.on('learning_scroll_sync', ({ category: cat, scrollTop }) => {
           if (cat === category) {
@@ -488,6 +515,22 @@
       } else {
         if (prevBtn) prevBtn.addEventListener('click', () => goChapter(-1));
         if (nextBtn) nextBtn.addEventListener('click', () => goChapter(1));
+      }
+
+      // Ownerが「目次へ戻る」を押したら、カテゴリ変更を同期してから遷移
+      const backA = document.getElementById('backLink');
+      if (backA && userRole === 'owner') {
+        backA.addEventListener('click', (ev) => {
+          try {
+            if (roomId) {
+              ev.preventDefault();
+              const sock = window.__learningSocketStory || (window.__learningSocketStory = io());
+              sock.emit('learning_category_change', { roomId, category });
+              // 少し待ってから遷移
+              setTimeout(() => { window.location.href = backA.href; }, 200);
+            }
+          } catch (e) {}
+        });
       }
     });
   </script>

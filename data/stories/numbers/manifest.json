@@ -1,0 +1,34 @@
+{
+  "category": "数値とデータの基礎",
+  "categoryId": "numbers",
+  "icon": "🔢",
+  "description": "ビットとバイト、進数、文字コードなど、Webエンジニアに必要な最小限のデータ基礎を、大正の恋物語で学ぶ",
+  "totalChapters": 15,
+  "estimatedReadingTime": "40-60分",
+  "difficulty": "初級",
+  "prerequisites": [],
+  "learningObjectives": [
+    "ビット/バイトと進数の基礎を理解する",
+    "主要なデータ型（整数・小数・文字列・真偽）を区別できる",
+    "文字コード（ASCII/UTF-8）の大枠を理解する",
+    "丸め誤差やオーバーフローなどの落とし穴を回避できる",
+    "JSONを使ってデータを表現・理解できる"
+  ],
+  "chapters": [
+    { "id": 1,  "title": "零と一の出会い",          "icon": "01", "summary": "ビットとバイト—最小の単位から世界が始まる", "file": "./01.json" },
+    { "id": 2,  "title": "想いを型に",              "icon": "02", "summary": "整数・小数・文字列・真偽—適材適所で扱う",     "file": "./02.json" },
+    { "id": 3,  "title": "進数の窓",                "icon": "03", "summary": "10/2/16進—表現は違えど同じ値",              "file": "./03.json" },
+    { "id": 4,  "title": "文字と数の橋",            "icon": "04", "summary": "ASCIIという対応表—文字を数へ",             "file": "./04.json" },
+    { "id": 5,  "title": "やさしいUTF-8",          "icon": "05", "summary": "可変長の考え方—日本語も含めた文字の旅",     "file": "./05.json" },
+    { "id": 6,  "title": "桁の限界",                "icon": "06", "summary": "オーバーフローの罠—範囲と符号",             "file": "./06.json" },
+    { "id": 7,  "title": "小数のゆらぎ",            "icon": "07", "summary": "0.1+0.2≠0.3?—丸めと誤差の心得",             "file": "./07.json" },
+    { "id": 8,  "title": "単位の約束",              "icon": "08", "summary": "bit/byte と kB/KiB—同音異義の落とし穴",     "file": "./08.json" },
+    { "id": 9,  "title": "時を数える",              "icon": "09", "summary": "Unix時刻とタイムゾーン—扱いの勘所",         "file": "./09.json" },
+    { "id": 10, "title": "真偽の灯",                "icon": "10", "summary": "true/false と条件分岐の基本",                "file": "./10.json" },
+    { "id": 11, "title": "並びと名付け",            "icon": "11", "summary": "配列と連想—順番と名前で整理する",           "file": "./11.json" },
+    { "id": 12, "title": "JSONという手紙",          "icon": "12", "summary": "人にも機械にも読みやすいデータの書式",      "file": "./12.json" },
+    { "id": 13, "title": "詰めて運ぶ",              "icon": "13", "summary": "圧縮のやさしい考え方—速く小さく",           "file": "./13.json" },
+    { "id": 14, "title": "確かめる印",              "icon": "14", "summary": "チェックサムで壊れを見抜く",               "file": "./14.json" },
+    { "id": 15, "title": "誓いのデータ",            "icon": "15", "summary": "振り返りと次章への架け橋",                   "file": "./15.json" }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "category": "ハードウェア",
+  "categoryId": "hardware",
+  "icon": "💾",
+  "description": "CPU・メモリ・ストレージ・I/Oなど、Webエンジニアが最低限知っておきたい計算機の『からだ』を学ぶ",
+  "totalChapters": 15,
+  "estimatedReadingTime": "40-60分",
+  "difficulty": "初級",
+  "prerequisites": [],
+  "learningObjectives": [
+    "CPUの基本的な動作と命令の流れを理解する",
+    "メモリ階層（レジスタ/キャッシュ/RAM/ストレージ）の役割を把握する",
+    "I/Oと割り込みの概念を知る",
+    "性能に影響する要素（キャッシュ・並列・クロック・ボトルネック）を捉える",
+    "信頼性（冗長・チェック）と運用上の勘所（熱・電力）を意識する"
+  ],
+  "chapters": [
+    { "id": 1,  "title": "機械の鼓動",           "icon": "⚙️", "summary": "フェッチ→デコード→実行—命令が流れる基本",         "file": "./01.json" },
+    { "id": 2,  "title": "灯から素子へ",         "icon": "💡", "summary": "真空管とトランジスタ—信号を増幅し切り替える",     "file": "./02.json" },
+    { "id": 3,  "title": "命令という言葉",       "icon": "📜", "summary": "命令セットの概念—機械に通じる最低限の語彙",       "file": "./03.json" },
+    { "id": 4,  "title": "記憶の庭",             "icon": "🧠", "summary": "RAMとROM—忘れる記憶と残す記憶",                 "file": "./04.json" },
+    { "id": 5,  "title": "近さの魔法",           "icon": "✨", "summary": "キャッシュと局所性—近くに置けば速くなる",         "file": "./05.json" },
+    { "id": 6,  "title": "永く残す器",           "icon": "🗄️", "summary": "HDDとSSD—速度と耐衝撃の違い",                     "file": "./06.json" },
+    { "id": 7,  "title": "道をひらく",           "icon": "🛤️", "summary": "バスと帯域—通り道が狭ければ詰まる",               "file": "./07.json" },
+    { "id": 8,  "title": "合図のしくみ",         "icon": "📯", "summary": "I/Oと割り込み—周辺からの呼びかけに応える",         "file": "./08.json" },
+    { "id": 9,  "title": "拍を刻む",             "icon": "⏱️", "summary": "クロックと同期—速さは拍で揃える",                   "file": "./09.json" },
+    { "id": 10, "title": "並び立つ心",           "icon": "🧩", "summary": "マルチコアと並列—同時に進めば速くなることも",     "file": "./10.json" },
+    { "id": 11, "title": "段取りの技",           "icon": "📦", "summary": "パイプライン—工程を分けて途切れなく流す",         "file": "./11.json" },
+    { "id": 12, "title": "熱と電の課題",         "icon": "🔥", "summary": "電力と発熱—速さの裏の制約",                         "file": "./12.json" },
+    { "id": 13, "title": "仮想の幕",             "icon": "🎭", "summary": "仮想化の入口—一枚の器に多くの舞台",                 "file": "./13.json" },
+    { "id": 14, "title": "壊れに備える",         "icon": "🧰", "summary": "冗長とチェック—失われないための工夫",               "file": "./14.json" },
+    { "id": 15, "title": "届く技術",             "icon": "📮", "summary": "振り返り—機械のからだが手紙を運ぶまで",             "file": "./15.json" }
+  ]
+}

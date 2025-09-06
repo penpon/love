@@ -458,6 +458,24 @@ io.on('connection', (socket) => {
       players: room.players.map(p => ({ name: p.name, role: p.role }))
     });
     
+    // すでにOwnerがモードを開始している場合のフォールバック同期
+    // Guestが「モード選択」画面に到達したタイミングで取りこぼしなく遷移させる
+    try {
+      if (room.learningState?.isActive) {
+        socket.emit('redirect_to_learning', {
+          roomId: roomId,
+          message: '学習モードが既に開始されています。学習画面へ移動します。'
+        });
+      } else if (room.quizState?.isActive) {
+        socket.emit('redirect_to_matching', {
+          roomId: roomId,
+          message: 'クイズモードが既に開始されています。マッチング画面へ移動します。'
+        });
+      }
+    } catch (e) {
+      console.warn('mode_select_join fallback redirect failed:', e);
+    }
+    
     // 相手プレイヤーにも接続状況を通知
     socket.to(roomId).emit('player_reconnected', {
       playerName: playerName,

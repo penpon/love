@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>通知デモA - 桜トースト（右上）</title>
+  <link rel="stylesheet" href="css/taisho.css" />
+  <script src="js/toast.js"></script>
+  <style>
+    :root {
+      --toast-width: 360px;
+    }
+    body { padding: 24px; }
+
+    /* 桜トースト */
+    .wa-toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      width: min(var(--toast-width), calc(100vw - 40px));
+      background: var(--gradient-sakura);
+      border: 2px solid var(--enjhi);
+      border-radius: var(--border-radius-large);
+      box-shadow: var(--shadow-strong);
+      color: var(--sumi);
+      padding: 14px 16px 10px 14px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      column-gap: 10px;
+      row-gap: 6px;
+      transform: translateX(120%);
+      opacity: 0;
+    }
+    .wa-toast .wa-icon { font-size: 1.4rem; align-self: center; }
+    .wa-toast .wa-title { font-weight: 700; color: var(--enjhi); }
+    .wa-toast .wa-text { grid-column: 2 / span 2; font-size: .95rem; }
+    .wa-toast .wa-close {
+      border: none; background: transparent; color: var(--enjhi);
+      font-weight: 700; font-size: 1.1rem; cursor: pointer; line-height: 1;
+      align-self: start; padding: 0 4px;
+    }
+    .wa-toast .wa-progress {
+      grid-column: 1 / -1; height: 3px; border-radius: 999px; overflow: hidden;
+      background: rgba(178,45,53,.15);
+    }
+    .wa-toast .wa-progress > span {
+      display: block; height: 100%; width: 100%;
+      background: linear-gradient(90deg, var(--enjhi), var(--yamabuki));
+      transform-origin: left center;
+    }
+
+    .wa-toast.show { animation: toastSlideIn .28s ease-out forwards; }
+    .wa-toast.hide { animation: toastSlideOut .24s ease-in forwards; }
+
+    @keyframes toastSlideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes toastSlideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to   { transform: translateX(120%); opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wa-toast.show, .wa-toast.hide { animation: fade .2s linear forwards; }
+      @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    }
+
+    /* デモUI */
+    .demo-grid { display: grid; gap: 12px; max-width: 720px; }
+    .demo-grid button { justify-self: start; }
+  </style>
+</head>
+<body>
+  <main class="washi-container wa-fade-in">
+    <header class="wa-header">
+      <h1 class="wa-title">通知デモA - 桜トースト（右上）</h1>
+      <p class="wa-subtitle">主催者の操作に追従する際の軽量トースト通知（右上・自動消滅）</p>
+      <div class="wa-divider"></div>
+    </header>
+
+    <section class="demo-grid">
+      <button class="wa-btn wa-btn-primary" onclick="demoProceed()">Ownerがモード選択へ進む（デモ）</button>
+      <button class="wa-btn wa-btn-secondary" onclick="demoLearning()">学習モードを開始（デモ）</button>
+      <button class="wa-btn wa-btn-outline" onclick="demoStory()">物語『第3話』へ移動（デモ）</button>
+    </section>
+  </main>
+
+  <script>
+    // デモ関数（共通トーストを使用）
+    function demoProceed() { if (window.showSakuraToast) showSakuraToast('主催者がモード選択へ進みました。自動で画面を切り替えます。', 1200, 'モード選択', '🌸'); }
+    function demoLearning() { if (window.showSakuraToast) showSakuraToast('学習モードを開始します。遷移しています…', 1200, '学習開始', '📚'); }
+    function demoStory()   { if (window.showSakuraToast) showSakuraToast('主催者が「第3話」を開きました。追従しています…', 1200, '物語へ移動', '📖'); }
+  </script>
+</body>
+</html>

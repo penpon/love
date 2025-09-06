@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>通知デモC - 掛け軸ピル（見出し直下）</title>
+  <link rel="stylesheet" href="css/taisho.css" />
+  <style>
+    body { padding: 24px; }
+
+    /* 掛け軸ピル */
+    .wa-kakejiku-pill {
+      position: relative;
+      margin: 12px auto 0 auto;
+      width: max-content;
+      max-width: min(90vw, 680px);
+      background: var(--gradient-washi);
+      border: 1.5px solid var(--ai);
+      border-radius: 999px;
+      color: var(--ai);
+      font-weight: 600;
+      padding: 8px 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      display: flex; align-items: center; gap: 8px;
+      opacity: 0; transform: translateY(-6px);
+      pointer-events: none;
+    }
+    .wa-kakejiku-pill .wa-icon { font-size: 1.1rem; }
+
+    .wa-kakejiku-pill.show { animation: pillIn .22s ease-out forwards; }
+    .wa-kakejiku-pill.hide { animation: pillOut .18s ease-in forwards; }
+
+    @keyframes pillIn { from { opacity: 0; transform: translateY(-6px);} to { opacity: 1; transform: translateY(0);} }
+    @keyframes pillOut { from { opacity: 1; transform: translateY(0);} to { opacity: 0; transform: translateY(-6px);} }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wa-kakejiku-pill.show, .wa-kakejiku-pill.hide { animation: fade .16s linear forwards; }
+      @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    }
+
+    /* デモボタン群 */
+    .demo-grid { display: grid; gap: 12px; max-width: 720px; margin-top: 18px; }
+    .demo-grid button { justify-self: start; }
+  </style>
+</head>
+<body>
+  <main class="washi-container wa-fade-in">
+    <header class="wa-header">
+      <h1 class="wa-title">通知デモC - 掛け軸ピル（見出し直下）</h1>
+      <div id="pill" class="wa-kakejiku-pill" role="status" aria-live="polite">
+        <span class="wa-icon">📜</span>
+        <span id="pillText">主催者の操作で自動遷移します</span>
+      </div>
+      <div class="wa-divider"></div>
+    </header>
+
+    <section class="demo-grid">
+      <button class="wa-btn wa-btn-primary" onclick="demoProceed()">Ownerがモード選択へ進む（デモ）</button>
+      <button class="wa-btn wa-btn-secondary" onclick="demoCategory()">カテゴリ『アルゴリズム』を表示（デモ）</button>
+      <button class="wa-btn wa-btn-outline" onclick="demoStory()">物語『第3話』へ移動（デモ）</button>
+    </section>
+  </main>
+
+  <script>
+    function showKakejikuPill(message = '主催者の操作で自動遷移します', duration = 1500, icon = '📜') {
+      const pill = document.getElementById('pill');
+      const text = document.getElementById('pillText');
+      if (!pill || !text) return;
+      // 先に消えている状態へ
+      pill.classList.remove('hide');
+      text.textContent = message;
+      pill.querySelector('.wa-icon').textContent = icon;
+      // 表示
+      pill.classList.add('show');
+      // 自動消滅
+      clearTimeout(pill._hideTimer);
+      pill._hideTimer = setTimeout(() => {
+        pill.classList.remove('show');
+        pill.classList.add('hide');
+      }, duration);
+    }
+
+    // デモ関数
+    function demoProceed(){ showKakejikuPill('主催者がモード選択へ進みました。自動で切り替わります。', 1600, '✨'); }
+    function demoCategory(){ showKakejikuPill('主催者が「アルゴリズム」を表示しました。', 1400, '🔄'); }
+    function demoStory(){ showKakejikuPill('物語「第3話」へ移動します…', 1400, '📖'); }
+  </script>
+</body>
+</html>

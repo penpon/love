@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ルーム情報入力 - CS学習クイズバトル</title>
     <link rel="stylesheet" href="css/taisho.css">
+    <script src="js/toast.js"></script>
 </head>
 <body>
     <!-- 四季の装飾要素 -->
@@ -392,6 +393,12 @@
             socket.on('match_found', (data) => {
                 console.log('マッチング完了:', data);
                 showParticipants(data);
+                // GuestはOwnerのモード選択完了まで待機メッセージを自動表示
+                if (userRole === 'guest') {
+                    showGuestWaitingForOwner();
+                    const proceedBtnGroup = document.getElementById('proceedBtnGroup');
+                    if (proceedBtnGroup) proceedBtnGroup.style.display = 'none';
+                }
             });
             
             socket.on('player_disconnected', (data) => {
@@ -405,47 +412,51 @@
                 resetConnection();
             });
             
-            // Guest用: Owner がモード選択画面に遷移した際の通知のみ（遷移はしない）
+            // Guest用: Owner がモード選択画面に遷移したら自動で追従遷移する（桜トースト表示）
             socket.on('owner_proceeded_to_mode_select', (data) => {
                 console.log(`Owner ${data.ownerName} がモード選択画面に遷移しました`, data);
-                
-                // Guestの場合は主催者の操作待ちメッセージを表示
                 if (userRole === 'guest') {
-                    showGuestWaitingForOwner();
+                    const rid = document.getElementById('roomId').value;
+                    const pname = document.getElementById('playerName').value;
+                    // トースト表示 → 追従遷移
+                    if (typeof showSakuraToast === 'function') {
+                        showSakuraToast('主催者がモード選択へ進みました。自動で切り替わります。', 900, 'モード選択', '🌸');
+                    }
+                    setTimeout(() => {
+                        window.location.href = `mode-select.html?role=${userRole}&roomId=${encodeURIComponent(rid)}&playerName=${encodeURIComponent(pname)}`;
+                    }, 900);
                 }
             });
             
-            // Guest用: 学習モード選択時の直接遷移
+            // Guest用: 学習モード選択時の直接遷移（桜トースト表示）
             socket.on('redirect_to_learning', (data) => {
                 console.log('学習モードが選択されました:', data);
                 
                 if (userRole === 'guest') {
                     const roomId = document.getElementById('roomId').value;
                     const playerName = document.getElementById('playerName').value;
-                    
-                    console.log('Guestとして学習画面に直接遷移します');
-                    
-                    // 短い遅延の後、学習画面へ遷移
+                    if (typeof showSakuraToast === 'function') {
+                        showSakuraToast('学習モードを開始します。遷移しています…', 1200, '学習開始', '📚');
+                    }
                     setTimeout(() => {
                         window.location.href = `learning.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
-                    }, 1000);
+                    }, 1200);
                 }
             });
             
-            // Guest用: クイズモード選択時の直接遷移
+            // Guest用: クイズモード選択時の直接遷移（桜トースト表示）
             socket.on('redirect_to_matching', (data) => {
                 console.log('クイズモードが選択されました:', data);
                 
                 if (userRole === 'guest') {
                     const roomId = document.getElementById('roomId').value;
                     const playerName = document.getElementById('playerName').value;
-                    
-                    console.log('Guestとしてマッチング画面に直接遷移します');
-                    
-                    // 短い遅延の後、マッチング画面へ遷移
+                    if (typeof showSakuraToast === 'function') {
+                        showSakuraToast('クイズモードを開始します。遷移しています…', 1200, 'クイズ開始', '⚔️');
+                    }
                     setTimeout(() => {
                         window.location.href = `matching.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
-                    }, 1000);
+                    }, 1200);
                 }
             });
             
@@ -612,8 +623,14 @@
             
             // 両方揃ったので続行ボタンを表示
             if (players.length >= 2) {
-                proceedBtnGroup.style.display = 'block';
-                updateProceedButtonText();
+                if (userRole === 'owner') {
+                    proceedBtnGroup.style.display = 'block';
+                    updateProceedButtonText();
+                } else {
+                    // GuestはOwnerのモード選択待ち
+                    proceedBtnGroup.style.display = 'none';
+                    showGuestWaitingForOwner();
+                }
             }
         }
         

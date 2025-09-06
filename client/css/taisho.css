@@ -891,7 +891,36 @@ body::before {
 }
 
 .wa-pulse {
-    animation: waPulse 2s infinite;
+    animation: waPulse 3s ease-in-out infinite;
+    /* クリック時のアニメーション干渉を防ぐ */
+    transform-origin: center;
+    /* より安定したクリック領域を確保 */
+    will-change: transform;
+    pointer-events: auto;
+}
+
+.wa-pulse:hover {
+    /* ホバー時はアニメーションを一時停止 */
+    animation-play-state: paused;
+    transform: scale(1.01);
+    /* スムーズな遷移 */
+    transition: transform 0.15s ease-out;
+}
+
+.wa-pulse:active {
+    /* クリック時はアニメーションを完全停止 */
+    animation: none !important;
+    transform: scale(0.99) !important;
+    transition: transform 0.05s ease-in !important;
+    /* クリック可能状態を保証 */
+    pointer-events: auto !important;
+}
+
+.wa-pulse:disabled {
+    /* 無効時はアニメーション停止 */
+    animation: none;
+    transform: scale(1);
+    pointer-events: none;
 }
 
 @keyframes waPulse {
@@ -900,8 +929,8 @@ body::before {
         opacity: 1;
     }
     50% {
-        transform: scale(1.05);
-        opacity: 0.9;
+        transform: scale(1.015);
+        opacity: 0.98;
     }
 }
 
@@ -1078,75 +1107,6 @@ body::before {
     display: block;
 }
 
-.wa-menu-header {
-    text-align: center;
-    margin-bottom: var(--spacing-xl);
-}
-
-.wa-category-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--spacing-lg);
-    margin: var(--spacing-xl) 0;
-}
-
-.wa-category-card {
-    background: var(--gradient-washi);
-    border: 2px solid var(--ai);
-    border-radius: var(--border-radius-large);
-    padding: var(--spacing-xl);
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(5px);
-}
-
-.wa-category-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    border-color: var(--enjhi);
-    box-shadow: var(--shadow-strong), 0 0 30px rgba(178, 45, 53, 0.2);
-}
-
-.wa-category-icon {
-    font-size: 3rem;
-    margin-bottom: var(--spacing-md);
-    display: block;
-}
-
-.wa-category-title {
-    font-family: var(--font-accent);
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--enjhi);
-    margin-bottom: var(--spacing-md);
-}
-
-.wa-category-description {
-    font-family: var(--font-main);
-    color: var(--sumi);
-    font-size: 1.1rem;
-    line-height: 1.7;
-    margin-bottom: var(--spacing-lg);
-}
-
-.wa-category-topics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
-    justify-content: center;
-}
-
-.wa-topic-tag {
-    background: rgba(22, 94, 131, 0.1);
-    color: var(--ai);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
-    font-family: var(--font-ui);
-    border: 1px solid rgba(22, 94, 131, 0.2);
-}
 
 .wa-story-content {
     max-width: 1200px;
@@ -1157,19 +1117,28 @@ body::before {
     display: flex;
     gap: var(--spacing-xl);
     align-items: flex-start;
+    /* 横並びから縦並びへ変更 */
+    flex-direction: column;
 }
 
 .wa-story-main {
-    flex: 2;
+    /* サイドバーを下に回すため固定幅の比率指定を解除 */
+    flex: initial;
     min-width: 0;
+    width: 100%;
 }
 
 .wa-story-sidebar {
-    flex: 1;
-    position: sticky;
-    top: var(--spacing-lg);
-    max-height: calc(100vh - var(--spacing-xxl));
-    overflow-y: auto;
+    /* サイドバーを本文の下に配置し自然なフローに */
+    flex: initial;
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+    margin-top: var(--spacing-xl);
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
 
 .wa-story-header {
@@ -1199,6 +1168,7 @@ body::before {
     border-radius: var(--border-radius-large);
     padding: var(--spacing-xl);
     box-shadow: var(--shadow-soft);
+    width: 100%;
 }
 
 .wa-story-scroll {
@@ -1254,6 +1224,17 @@ body::before {
     border-radius: var(--border-radius-large);
     padding: var(--spacing-lg);
     margin-top: var(--spacing-xl);
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.wa-key-concepts.visible {
+    opacity: 1;
+    transform: none;
 }
 
 .wa-concepts-title {

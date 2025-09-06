@@ -96,10 +96,11 @@
                     <span>🔙</span>
                     <span>前の画面に戻る</span>
                 </button>
-                <button class="wa-btn wa-btn-primary wa-btn-large" id="startBtn" onclick="startSelectedMode()" disabled>
-                    <span id="startIcon">🌸</span>
-                    <span id="startText">学習の扉を開く</span>
-                </button>
+                <!-- 学習の扉ボタンは自動遷移のため非表示 -->
+                <div id="autoModeMessage" style="display: none; padding: 1rem; color: var(--take); font-size: 1.1rem; text-align: center;">
+                    <span id="autoModeIcon">🌸</span>
+                    <span id="autoModeText">自動的にモードを開始しています...</span>
+                </div>
             </div>
         </section>
 
@@ -117,6 +118,16 @@
             </div>
         </div>
     </main>
+
+    <!-- 選択ガイダンス（JSから参照） -->
+    <section class="wa-selection-guidance" id="selectionGuidance" style="display: none;">
+        <div class="wa-card">
+            <div class="wa-card-title" id="guidanceTitle"></div>
+            <div class="wa-card-content">
+                <p id="guidanceContent" style="margin: 0;"></p>
+            </div>
+        </div>
+    </section>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -218,9 +229,27 @@
                 document.getElementById('participantCount').textContent = '2名';
             });
             
-            // ルームが見つからない場合
+            // ルームが見つからない場合の自動復旧処理
             socket.on('room_not_found', () => {
-                showError('指定されたルームが見つかりません。ロビーに戻って再度接続してください。');
+                console.log('ルームが見つかりません。自動復旧を試行します...');
+                
+                // 自動復旧を1回だけ試行
+                if (!socket._autoRecoveryAttempted) {
+                    socket._autoRecoveryAttempted = true;
+                    
+                    setTimeout(() => {
+                        console.log('ルーム復旧を試行中...');
+                        socket.emit('mode_select_join', {
+                            roomId: roomId,
+                            playerName: playerName,
+                            role: userRole,
+                            recovery: true  // 復旧フラグ
+                        });
+                    }, 1000);
+                } else {
+                    // 復旧に失敗した場合のみエラー表示
+                    showError('接続に問題が発生しました。ロビーに戻って再度お試しください。\n\n原因:\n• ネットワークの一時的な問題\n• サーバーとの同期エラー', true);
+                }
             });
             
             // 学習モード選択時の遷移
@@ -258,6 +287,13 @@
             
             selectedMode = mode;
             updateSelectedMode(mode, false);
+            
+            // Ownerの場合、自動的にモードを開始
+            if (userRole === 'owner') {
+                setTimeout(() => {
+                    startSelectedMode();
+                }, 1500); // 1.5秒後に自動開始
+            }
         }
         
         function updateSelectedMode(mode, isForced = false) {
@@ -272,26 +308,28 @@
             // ガイダンス表示
             showModeGuidance(mode, isForced);
             
-            // ボタンの状態更新
-            const startBtn = document.getElementById('startBtn');
-            const startIcon = document.getElementById('startIcon');
-            const startText = document.getElementById('startText');
+            // 自動モード開始メッセージの状態更新
+            const autoModeMessage = document.getElementById('autoModeMessage');
+            const autoModeIcon = document.getElementById('autoModeIcon');
+            const autoModeText = document.getElementById('autoModeText');
             const statusSelection = document.getElementById('statusSelection');
             
-            if (mode === 'learning') {
-                startIcon.textContent = '🌸';
-                startText.textContent = '学習の扉を開く';
-                statusSelection.textContent = '学習モード';
-                statusSelection.style.color = 'var(--take)';
-            } else if (mode === 'quiz') {
-                startIcon.textContent = '⚔️';
-                startText.textContent = '対戦の場へ向かう';
-                statusSelection.textContent = 'クイズモード';
-                statusSelection.style.color = 'var(--enjhi)';
+            if (userRole === 'owner') {
+                // Ownerの場合は自動モード開始メッセージを表示
+                autoModeMessage.style.display = 'block';
+                
+                if (mode === 'learning') {
+                    autoModeIcon.textContent = '🌸';
+                    autoModeText.textContent = '学習モードを開始しています...';
+                    statusSelection.textContent = '学習モード';
+                    statusSelection.style.color = 'var(--take)';
+                } else if (mode === 'quiz') {
+                    autoModeIcon.textContent = '⚔️';
+                    autoModeText.textContent = 'クイズモードを開始しています...';
+                    statusSelection.textContent = 'クイズモード';
+                    statusSelection.style.color = 'var(--enjhi)';
+                }
             }
-            
-            startBtn.disabled = false;
-            startBtn.classList.add('wa-pulse');
         }
         
         function showModeGuidance(mode, isForced) {
@@ -328,11 +366,18 @@
             modal.className = 'wa-modal active';
             modal.innerHTML = `
                 <div class="wa-modal-content">
-                    <h3 style="color: var(--ai); margin-bottom: 1rem;">🎋 参加者の皆様</h3>
+                    <h3 style="color: var(--ai); margin-bottom: 1rem;">🎋 参加者様へのご案内</h3>
                     <p style="margin-bottom: 1.5rem;">
-                        学習方式は主催者が選択いたします。<br>
-                        しばらくお待ちください。
+                        学習方式の選択は主催者様が行います。<br>
+                        主催者様の選択をお待ちください。選択されると自動的に適切な画面へ移動いたします。
                     </p>
+                    <div style="text-align: center; margin: 1rem 0;">
+                        <div class="wa-waiting-animation">
+                            <div class="wa-waiting-dot"></div>
+                            <div class="wa-waiting-dot"></div>
+                            <div class="wa-waiting-dot"></div>
+                        </div>
+                    </div>
                     <button class="wa-btn wa-btn-primary" onclick="this.closest('.wa-modal').remove()">
                         承知いたしました
                     </button>
@@ -403,16 +448,26 @@
         }
 
         // エラー表示
-        function showError(message) {
+        function showError(message, isDetailedError = false) {
             const modal = document.createElement('div');
             modal.className = 'wa-modal active';
+            
+            // 詳細エラーの場合は改行を適切に処理
+            const formattedMessage = isDetailedError ? 
+                message.replace(/\n/g, '<br>') : message;
+            
             modal.innerHTML = `
                 <div class="wa-modal-content">
                     <h3 style="color: var(--enjhi); margin-bottom: 1rem;">⚠️ エラー</h3>
-                    <p style="margin-bottom: 1.5rem;">${message}</p>
-                    <button class="wa-btn wa-btn-primary" onclick="this.closest('.wa-modal').remove()">
-                        確認
-                    </button>
+                    <div style="margin-bottom: 1.5rem; text-align: left; line-height: 1.6;">${formattedMessage}</div>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button class="wa-btn wa-btn-primary" onclick="this.closest('.wa-modal').remove(); goBack();">
+                            ロビーに戻る
+                        </button>
+                        <button class="wa-btn wa-btn-secondary" onclick="this.closest('.wa-modal').remove();">
+                            再試行
+                        </button>
+                    </div>
                 </div>
             `;
             document.body.appendChild(modal);
@@ -893,6 +948,37 @@
         .wa-loading p {
             color: var(--sumi);
             font-style: italic;
+        }
+        
+        /* 待機アニメーション（共通） */
+        .wa-waiting-animation {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-xs);
+            margin: var(--spacing-sm) 0;
+        }
+
+        .wa-waiting-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--enjhi);
+            border-radius: 50%;
+            animation: wa-waiting-pulse 1.4s ease-in-out infinite both;
+        }
+
+        .wa-waiting-dot:nth-child(1) { animation-delay: -0.32s; }
+        .wa-waiting-dot:nth-child(2) { animation-delay: -0.16s; }
+        .wa-waiting-dot:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes wa-waiting-pulse {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         @media (max-width: 768px) {

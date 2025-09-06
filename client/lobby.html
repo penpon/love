@@ -117,7 +117,7 @@
                             <div class="wa-participant-item">
                                 <span class="wa-participant-role">主催者</span>
                                 <span class="wa-participant-name" id="ownerName">-</span>
-                                <span class="wa-participant-status ready">準備完了</span>
+                                <span class="wa-participant-status" id="ownerStatus">準備完了</span>
                             </div>
                             <div class="wa-participant-item">
                                 <span class="wa-participant-role">参加者</span>
@@ -129,9 +129,9 @@
 
                     <!-- 続行ボタン -->
                     <div class="wa-btn-group" id="proceedBtnGroup" style="display: none; margin-top: 2rem;">
-                        <button class="wa-btn wa-btn-secondary wa-pulse" onclick="proceedToModeSelect()">
-                            <span>✨</span>
-                            <span>モード選択へ進む</span>
+                        <button class="wa-btn wa-btn-secondary wa-pulse" id="proceedButton" onclick="proceedToModeSelect()">
+                            <span id="proceedIcon">✨</span>
+                            <span id="proceedText">モード選択へ進む</span>
                         </button>
                     </div>
                 </div>
@@ -282,8 +282,13 @@
         
         // ルーム接続
         function connectToRoom() {
-            if (isConnecting || roomConnected) {
-                console.log('既に接続処理中またはルームに接続済みです');
+            if (isConnecting) {
+                showError('現在接続処理中です。しばらくお待ちください。');
+                return;
+            }
+            
+            if (roomConnected) {
+                showError('既にルームに接続されています。');
                 return;
             }
             
@@ -292,13 +297,25 @@
             const connectBtn = document.getElementById('connectBtn');
             
             // フォーム検証
-            if (!roomId || roomId.length < 4 || roomId.length > 20) {
-                showError('ルーム名は4-20文字で入力してください');
+            if (!roomId) {
+                showError('ルーム名を入力してください。');
+                return;
+            } else if (roomId.length < 4) {
+                showError(`ルーム名が短すぎます。現在${roomId.length}文字（4文字以上必要）`);
+                return;
+            } else if (roomId.length > 20) {
+                showError(`ルーム名が長すぎます。現在${roomId.length}文字（20文字以内）`);
                 return;
             }
             
-            if (!playerName || playerName.length < 2 || playerName.length > 15) {
-                showError('お名前は2-15文字で入力してください');
+            if (!playerName) {
+                showError('お名前を入力してください。');
+                return;
+            } else if (playerName.length < 2) {
+                showError(`お名前が短すぎます。現在${playerName.length}文字（2文字以上必要）`);
+                return;
+            } else if (playerName.length > 15) {
+                showError(`お名前が長すぎます。現在${playerName.length}文字（15文字以内）`);
                 return;
             }
             
@@ -388,20 +405,46 @@
                 resetConnection();
             });
             
-            // Guest用: Owner がモード選択画面に遷移した際の自動遷移処理
+            // Guest用: Owner がモード選択画面に遷移した際の通知のみ（遷移はしない）
             socket.on('owner_proceeded_to_mode_select', (data) => {
                 console.log(`Owner ${data.ownerName} がモード選択画面に遷移しました`, data);
                 
-                // Guestの場合のみ自動遷移
+                // Guestの場合は主催者の操作待ちメッセージを表示
+                if (userRole === 'guest') {
+                    showGuestWaitingForOwner();
+                }
+            });
+            
+            // Guest用: 学習モード選択時の直接遷移
+            socket.on('redirect_to_learning', (data) => {
+                console.log('学習モードが選択されました:', data);
+                
                 if (userRole === 'guest') {
                     const roomId = document.getElementById('roomId').value;
                     const playerName = document.getElementById('playerName').value;
                     
-                    console.log('Guestとして自動的にモード選択画面に遷移します');
+                    console.log('Guestとして学習画面に直接遷移します');
                     
-                    // 短い遅延の後、モード選択画面へ遷移
+                    // 短い遅延の後、学習画面へ遷移
                     setTimeout(() => {
-                        window.location.href = `mode-select.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
+                        window.location.href = `learning.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
+                    }, 1000);
+                }
+            });
+            
+            // Guest用: クイズモード選択時の直接遷移
+            socket.on('redirect_to_matching', (data) => {
+                console.log('クイズモードが選択されました:', data);
+                
+                if (userRole === 'guest') {
+                    const roomId = document.getElementById('roomId').value;
+                    const playerName = document.getElementById('playerName').value;
+                    
+                    console.log('Guestとしてマッチング画面に直接遷移します');
+                    
+                    // 短い遅延の後、マッチング画面へ遷移
+                    setTimeout(() => {
+                        window.location.href = `matching.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
                     }, 1000);
                 }
             });
@@ -441,6 +484,9 @@
             // 接続完了後のボタン状態を更新
             updateConnectionButton();
             
+            // ボタンテキストを役割に応じて更新
+            updateProceedButtonText();
+            
             if (userRole === 'owner') {
                 if (participants.length < 2) {
                     showWaitingForGuest();
@@ -450,6 +496,9 @@
             } else {
                 showParticipants({ players: participants });
             }
+            
+            // ボタンテキストを更新
+            updateProceedButtonText();
         }
         
         // 接続完了後のボタン状態を更新
@@ -489,11 +538,6 @@
                 showError('ルーム名とお名前を入力してください');
                 return;
             }
-            
-            // 短い遅延の後、新しいルームを作成
-            setTimeout(() => {
-                connectToRoom();
-            }, 100);
         }
         
         // Guest用：接続取り消し機能
@@ -539,10 +583,20 @@
             const guestPlayer = players.find(p => p.role === 'guest');
             
             // Owner表示
+            const ownerStatus = document.getElementById('ownerStatus');
             if (ownerPlayer) {
                 ownerName.textContent = ownerPlayer.name;
+                if (userRole === 'guest') {
+                    ownerStatus.textContent = '待機中';
+                    ownerStatus.className = 'wa-participant-status';
+                } else {
+                    ownerStatus.textContent = '準備完了';
+                    ownerStatus.className = 'wa-participant-status ready';
+                }
             } else {
                 ownerName.textContent = '待機中...';
+                ownerStatus.textContent = '未接続';
+                ownerStatus.className = 'wa-participant-status';
             }
             
             // Guest表示
@@ -559,6 +613,7 @@
             // 両方揃ったので続行ボタンを表示
             if (players.length >= 2) {
                 proceedBtnGroup.style.display = 'block';
+                updateProceedButtonText();
             }
         }
         
@@ -669,23 +724,99 @@
             } else {
                 connectText.textContent = 'ルームに参加';
             }
+            
+            // onclickイベントを元に戻す
+            connectBtn.onclick = connectToRoom;
+            
+            // 続行ボタンのテキストをリセット
+            updateProceedButtonText();
         }
         
         function proceedToModeSelect() {
             const roomId = document.getElementById('roomId').value;
             const playerName = document.getElementById('playerName').value;
+            const proceedButton = document.getElementById('proceedButton');
             
-            // Ownerの場合、サーバーにモード選択遷移を通知
-            if (userRole === 'owner' && socket && socket.connected) {
-                socket.emit('proceed_to_mode_select', {
-                    roomId: roomId
-                });
+            // ボタンを一時的に無効化してダブルクリックを防ぐ
+            if (proceedButton.disabled) return;
+            proceedButton.disabled = true;
+            
+            // アニメーションを一時停止
+            proceedButton.classList.remove('wa-pulse');
+            
+            // 処理完了後、ボタン状態を復元（3秒後）
+            setTimeout(() => {
+                proceedButton.disabled = false;
+                proceedButton.classList.add('wa-pulse');
+            }, 3000);
+            
+            if (userRole === 'owner') {
+                // Ownerの場合、サーバーにモード選択遷移を通知してから遷移
+                if (socket && socket.connected) {
+                    socket.emit('proceed_to_mode_select', {
+                        roomId: roomId
+                    });
+                }
+                
+                // モード選択画面へ遷移
+                window.location.href = `mode-select.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
+            } else {
+                // Guestの場合、主催者の操作を待つメッセージを表示
+                showGuestWaitingForOwner();
             }
-            
-            // モード選択画面へ遷移
-            window.location.href = `mode-select.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
         }
         
+        // 続行ボタンのテキストを役割に応じて更新
+        function updateProceedButtonText() {
+            const proceedButton = document.getElementById('proceedButton');
+            const proceedIcon = document.getElementById('proceedIcon');
+            const proceedText = document.getElementById('proceedText');
+            
+            if (!proceedButton || !proceedIcon || !proceedText) return;
+            
+            if (userRole === 'owner') {
+                proceedIcon.textContent = '✨';
+                proceedText.textContent = 'モード選択へ進む';
+            } else {
+                proceedIcon.textContent = '🎋';
+                proceedText.textContent = '接続する';
+            }
+        }
+        
+        // Guest用の待機メッセージを表示
+        function showGuestWaitingForOwner() {
+            // 既存の通知があれば削除
+            const existingNotice = document.getElementById('guestWaitingNotice');
+            if (existingNotice) {
+                existingNotice.remove();
+            }
+            
+            // 通知要素を作成
+            const notice = document.createElement('div');
+            notice.id = 'guestWaitingNotice';
+            notice.className = 'wa-guest-waiting-notice wa-fade-in';
+            notice.innerHTML = `
+                <div class="wa-notice-content">
+                    <div class="wa-notice-icon">🌸</div>
+                    <div class="wa-notice-text">
+                        <h4>🎋 参加者様へのご案内</h4>
+                        <p>
+                            主催者(Owner)がモード選択を終えるまでお待ちください。<br>
+                            主催者の選択が完了すると、自動的に画面が切り替わります。
+                        </p>
+                        <div class="wa-waiting-animation">
+                            <div class="wa-waiting-dot"></div>
+                            <div class="wa-waiting-dot"></div>
+                            <div class="wa-waiting-dot"></div>
+                        </div>
+                    </div>
+                    <button class="wa-notice-close" onclick="this.closest('.wa-guest-waiting-notice').remove();">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notice);
+        }
+
         function goBack() {
             if (socket) {
                 socket.disconnect();
@@ -1013,6 +1144,125 @@
             margin-bottom: var(--spacing-sm);
         }
 
+        /* Guest待機通知のスタイル */
+        .wa-guest-waiting-notice {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: var(--gradient-sakura);
+            border: 2px solid var(--enjhi);
+            border-radius: var(--border-radius-large);
+            box-shadow: var(--shadow-strong);
+            max-width: 400px;
+            animation: wa-notice-slide-in 0.4s ease-out;
+        }
+
+        .wa-notice-content {
+            display: flex;
+            align-items: flex-start;
+            padding: var(--spacing-lg);
+            gap: var(--spacing-md);
+        }
+
+        .wa-notice-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .wa-notice-text h4 {
+            color: var(--enjhi);
+            font-family: var(--font-accent);
+            margin: 0 0 var(--spacing-sm) 0;
+            font-size: 1.1rem;
+        }
+
+        .wa-notice-text p {
+            color: var(--sumi);
+            margin: 0 0 var(--spacing-md) 0;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .wa-waiting-animation {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-xs);
+            margin-top: var(--spacing-sm);
+        }
+
+        .wa-waiting-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--enjhi);
+            border-radius: 50%;
+            animation: wa-waiting-pulse 1.4s ease-in-out infinite both;
+        }
+
+        .wa-waiting-dot:nth-child(1) { animation-delay: -0.32s; }
+        .wa-waiting-dot:nth-child(2) { animation-delay: -0.16s; }
+        .wa-waiting-dot:nth-child(3) { animation-delay: 0s; }
+
+        .wa-notice-close {
+            background: none;
+            border: none;
+            color: var(--enjhi);
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .wa-notice-close:hover {
+            background: rgba(178, 45, 53, 0.1);
+        }
+
+        /* アニメーション */
+        @keyframes wa-notice-slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes wa-waiting-pulse {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .wa-fade-out {
+            animation: wa-notice-slide-out 0.3s ease-in forwards;
+        }
+
+        @keyframes wa-notice-slide-out {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
         @media (max-width: 768px) {
             .wa-radio-group {
                 grid-template-columns: 1fr;
@@ -1020,6 +1270,25 @@
             
             .wa-help-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .wa-guest-waiting-notice {
+                left: 10px;
+                right: 10px;
+                top: 10px;
+                max-width: none;
+            }
+
+            .wa-notice-content {
+                padding: var(--spacing-md);
+            }
+
+            .wa-notice-text h4 {
+                font-size: 1rem;
+            }
+
+            .wa-notice-text p {
+                font-size: 0.85rem;
             }
         }
     </style>

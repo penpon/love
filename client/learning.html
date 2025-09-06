@@ -6,6 +6,7 @@
     <title>学習の間 - CS学習クイズバトル</title>
     <link rel="stylesheet" href="css/taisho.css">
     <script src="/socket.io/socket.io.js"></script>
+    <script src="js/socket.js"></script>
 </head>
 <body>
     <!-- 四季の装飾要素 -->
@@ -56,11 +57,8 @@
 
         <!-- ナビゲーション -->
         <nav class="wa-learning-nav">
-            <div class="wa-nav-item active" data-category="menu">
-                <span class="wa-nav-icon">📚</span>
-                <span class="wa-nav-text">分野選択</span>
-            </div>
-            <div class="wa-nav-item" data-category="numbers">
+            <!-- 分野選択タブは不要のため削除。初期選択は numbers -->
+            <div class="wa-nav-item active" data-category="numbers">
                 <span class="wa-nav-icon">🔢</span>
                 <span class="wa-nav-text">数値・データ</span>
             </div>
@@ -86,115 +84,207 @@
             </div>
         </nav>
 
-        <!-- メインコンテンツ -->
-        <section class="wa-learning-main">
-            <!-- 分野選択画面 -->
-            <div class="wa-content-section active" id="menu">
-                <div class="wa-menu-header">
-                    <h2 class="wa-section-title">📖 CS雅学の書庫</h2>
-                    <p class="wa-description">短歌と恋愛物語で紡ぐコンピューターサイエンスの世界</p>
-                </div>
+        <!-- デザインC: 巻物タイムライン（カテゴリ直下の物語選択UI） -->
+        <section class="wa-fade-in" id="story-selector" aria-label="物語選択">
+            <style>
+                /* 巻物タイムライン UI（学習画面内に限定適用） */
+                #story-selector .c-nav { display:flex; gap: var(--spacing-sm); flex-wrap: wrap; justify-content: center; margin-bottom: var(--spacing-lg); }
+                #story-selector .c-scroll { background: var(--gradient-washi); border:2px solid var(--ai); border-radius: var(--border-radius-large); padding: var(--spacing-xl); position: relative; overflow: hidden; }
+                #story-selector .c-scroll::before, #story-selector .c-scroll::after { content:''; position:absolute; left: 0; right: 0; height: 12px; background: repeating-linear-gradient(90deg, rgba(178,45,53,.15) 0 12px, transparent 12px 24px); }
+                #story-selector .c-scroll::before { top:0; } #story-selector .c-scroll::after { bottom:0; }
+                #story-selector .c-timeline { position: relative; margin: var(--spacing-xl) auto; max-width: 980px; }
+                #story-selector .c-timeline::before { content:''; position:absolute; left: 20px; top:0; bottom:0; width: 4px; background: linear-gradient(180deg, var(--enjhi), var(--yamabuki)); border-radius: 2px; }
+                #story-selector .c-node{ position:relative; display:grid; grid-template-columns: 60px 1fr; gap: var(--spacing-md); margin-bottom: var(--spacing-xl); align-items: start; }
+                #story-selector .c-pin{ width: 18px; height: 18px; border-radius: 50%; background: var(--enjhi); border: 3px solid var(--washi); box-shadow: var(--shadow-soft); position: relative; left: 12px; top: 6px; }
+                #story-selector .c-card{ background: var(--gradient-sakura); border:2px solid var(--enjhi); border-radius: var(--border-radius); padding: var(--spacing-lg); box-shadow: var(--shadow-soft); cursor: pointer; transition: transform .2s ease; }
+                #story-selector .c-card:hover{ transform: translateY(-3px); }
+                #story-selector .c-title{ font-family: var(--font-accent); color: var(--enjhi); font-weight: 800; }
+                #story-selector .c-sub{ color: var(--ai); font-size: .95rem; margin-top: 6px; }
+                #story-selector .c-meta{ display:flex; gap:6px; flex-wrap:wrap; margin-top: 8px; }
+                #story-selector .c-chip{ background: rgba(22,94,131,.08); color: var(--ai); border:1px solid rgba(22,94,131,.2); border-radius: 999px; padding: 2px 8px; font-size: .8rem; }
+                #story-selector .c-hidden{ display:none; }
+            </style>
 
-                <div class="wa-category-grid">
-                    <div class="wa-category-card" onclick="selectCategory('numbers')">
-                        <div class="wa-category-icon">🔢</div>
-                        <h3 class="wa-category-title">数値とデータの基礎</h3>
-                        <div class="wa-category-description">
-                            二進法の恋文から始まる<br>
-                            データ表現の美しい世界
-                        </div>
-                        <div class="wa-category-topics">
-                            <span class="wa-topic-tag">二進法</span>
-                            <span class="wa-topic-tag">データ型</span>
-                            <span class="wa-topic-tag">文字コード</span>
-                        </div>
-                    </div>
+            <!-- カテゴリ内タブは不要のため非表示 -->
 
-                    <div class="wa-category-card" onclick="selectCategory('hardware')">
-                        <div class="wa-category-icon">💾</div>
-                        <h3 class="wa-category-title">ハードウェア</h3>
-                        <div class="wa-category-description">
-                            戦場の機械式計算機と<br>
-                            現代コンピュータの物語
-                        </div>
-                        <div class="wa-category-topics">
-                            <span class="wa-topic-tag">CPU</span>
-                            <span class="wa-topic-tag">メモリ</span>
-                            <span class="wa-topic-tag">記憶装置</span>
-                        </div>
-                    </div>
-
-                    <div class="wa-category-card" onclick="selectCategory('algorithms')">
-                        <div class="wa-category-icon">🔄</div>
-                        <h3 class="wa-category-title">データ構造・アルゴリズム</h3>
-                        <div class="wa-category-description">
-                            効率的な愛の伝達方法を<br>
-                            アルゴリズムで表現
-                        </div>
-                        <div class="wa-category-topics">
-                            <span class="wa-topic-tag">配列</span>
-                            <span class="wa-topic-tag">ソート</span>
-                            <span class="wa-topic-tag">探索</span>
-                        </div>
-                    </div>
-
-                    <div class="wa-category-card" onclick="selectCategory('web')">
-                        <div class="wa-category-icon">🌐</div>
-                        <h3 class="wa-category-title">Web基盤技術</h3>
-                        <div class="wa-category-description">
-                            遠距離恋愛を支える<br>
-                            Webの仕組みと技術
-                        </div>
-                        <div class="wa-category-topics">
-                            <span class="wa-topic-tag">HTTP</span>
-                            <span class="wa-topic-tag">HTML/CSS</span>
-                            <span class="wa-topic-tag">JavaScript</span>
-                        </div>
-                    </div>
-
-                    <div class="wa-category-card" onclick="selectCategory('network')">
-                        <div class="wa-category-icon">🔗</div>
-                        <h3 class="wa-category-title">ネットワーク</h3>
-                        <div class="wa-category-description">
-                            戦時通信網から学ぶ<br>
-                            現代ネットワークの基礎
-                        </div>
-                        <div class="wa-category-topics">
-                            <span class="wa-topic-tag">TCP/IP</span>
-                            <span class="wa-topic-tag">DNS</span>
-                            <span class="wa-topic-tag">プロトコル</span>
-                        </div>
-                    </div>
-
-                    <div class="wa-category-card" onclick="selectCategory('security')">
-                        <div class="wa-category-icon">🔐</div>
-                        <h3 class="wa-category-title">セキュリティ</h3>
-                        <div class="wa-category-description">
-                            暗号化された愛の手紙で<br>
-                            学ぶセキュリティの重要性
-                        </div>
-                        <div class="wa-category-topics">
-                            <span class="wa-topic-tag">暗号化</span>
-                            <span class="wa-topic-tag">認証</span>
-                            <span class="wa-topic-tag">脆弱性</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Owner専用同期制御パネル -->
-                <div class="wa-sync-control" id="syncControl" style="display: none; margin-top: 2rem;">
-                    <div class="wa-card">
-                        <div class="wa-card-title">🎭 主催者制御</div>
-                        <div class="wa-card-content">
-                            <p style="margin-bottom: 1rem;">参加者の画面があなたの操作に同期します</p>
-                            <div class="wa-status-item">
-                                <span class="wa-status-dot" id="syncStatus"></span>
-                                <span id="syncStatusText">同期準備中</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- 巻物タイムライン本体（最大15話） -->
+            <div class="c-scroll">
+                <div id="tl-numbers" class="c-timeline"></div>
+                <div id="tl-hardware" class="c-timeline c-hidden"></div>
+                <div id="tl-algorithms" class="c-timeline c-hidden"></div>
+                <div id="tl-web" class="c-timeline c-hidden"></div>
+                <div id="tl-network" class="c-timeline c-hidden"></div>
+                <div id="tl-security" class="c-timeline c-hidden"></div>
             </div>
+
+            <script>
+                // タイムライン表示用のラベル（フォールバック）
+                const TL_DATA_FALLBACK = {
+                    hardware: ['機械式計算機の恋','真空管の灯り','トランジスタの鼓動','メモリの記憶','ストレージの約束','CPUの三拍子','パイプラインの舞','キャッシュの囁き','命令セットの詩','クロックと愛'],
+                    algorithms: ['探索は君を探して','ソートのダンス','貪欲法の誘惑','動的計画の手紙','グラフの恋路','木と森の物語','再帰の輪舞'],
+                    web: ['HTMLの恋文','CSSの彩り','JavaScriptの告白','HTTPの手紙','Cookieの思い出','RESTの誓い','SPAのきらめき'],
+                    network: ['TCPの握手','UDPの走り書き','DNSの名付け','ルーティングの旅','VPNの密会'],
+                    security: ['暗号の指輪','公開鍵の約束','ハッシュの封印','ゼロトラストの誓い','XSSの影','CSRFの罠']
+                };
+
+                // 物語データキャッシュ（カテゴリ -> JSON）
+                const STORIES = { numbers: null, hardware: null, algorithms: null, web: null, network: null, security: null };
+
+                // タイムライン描画
+                // items: [{ title, ep, icon, summary }]
+                function renderTimeline(rootId, items, catKey){
+                    const root = document.getElementById(rootId);
+                    if (!root) return;
+                    root.innerHTML = '';
+                    items.forEach((it, i)=>{
+                        const node = document.createElement('div');
+                        node.className = 'c-node';
+                        node.innerHTML = `
+                            <div class='c-pin'></div>
+                            <div class='c-card wa-pulse' data-story-title="${it.title}" data-cat="${catKey}" data-ep="${it.ep}">
+                                <div class='c-title'>${it.icon ? `<span style="margin-right:6px;">${it.icon}</span>` : ''}${it.title}</div>
+                                <div class='c-sub'>${it.summary || '短いあらすじがここに入ります。'}</div>
+                                <div class='c-meta'>
+                                    <span class='c-chip'>第${it.ep}話</span>
+                                    <span class='c-chip'>学習 5〜8分</span>
+                                </div>
+                            </div>`;
+                        root.appendChild(node);
+                    });
+                }
+
+                // カテゴリ: numbers をJSONから読み込んで描画
+                async function loadNumbers() {
+                    try {
+                        const res = await fetch('/data/stories/01_numbers.json');
+                        if (!res.ok) throw new Error('numbers JSON not found');
+                        const json = await res.json();
+                        STORIES.numbers = json;
+                        const items = (json.chapters || []).map(ch => ({
+                            ep: ch.id,
+                            title: `第${ch.id}章：${ch.title}`,
+                            icon: ch.icon || '',
+                            summary: ch.summary || ''
+                        }));
+                        renderTimeline('tl-numbers', items, 'numbers');
+                    } catch (e) {
+                        // フォールバック（3話）
+                        const fallback = [
+                            { ep: 1, title: '第一章：二進法の恋文', icon: '01', summary: '' },
+                            { ep: 2, title: '第二章：データ型の恋愛関係', icon: '02', summary: '' },
+                            { ep: 3, title: '第三章：進数変換の愛', icon: '03', summary: '' }
+                        ];
+                        renderTimeline('tl-numbers', fallback, 'numbers');
+                    }
+                }
+
+                // 他カテゴリのJSONを読み込み描画
+                async function loadCategory(cat, path) {
+                    try {
+                        const res = await fetch(path);
+                        if (!res.ok) throw new Error('not found: '+path);
+                        const json = await res.json();
+                        STORIES[cat] = json;
+                        const items = (json.chapters || []).map(ch => ({
+                            ep: ch.id,
+                            title: `第${ch.id}章：${ch.title}`,
+                            icon: ch.icon || '',
+                            summary: ch.summary || ''
+                        }));
+                        renderTimeline('tl-'+cat, items, cat);
+                    } catch (e) {
+                        const items = (TL_DATA_FALLBACK[cat] || []).map((title, idx) => ({ ep: idx+1, title, icon: '', summary: '' }));
+                        renderTimeline('tl-'+cat, items, cat);
+                    }
+                }
+
+                
+
+                // カテゴリ内タブは撤廃（トップナビと同期表示に一本化）
+
+                // 物語選択時の遷移（既存セクションへ移動）
+                document.getElementById('story-selector').addEventListener('click', (e)=>{
+                    const card = e.target.closest('.c-card');
+                    if (!card) return;
+                    const cat = card.getAttribute('data-cat');
+                    const title = card.getAttribute('data-story-title');
+                    const ep = parseInt(card.getAttribute('data-ep'), 10) || 1;
+
+                    // 2ページ構成に変更: 物語本文ページへ遷移
+                    // クエリ: category, chapter を付与
+                    const params = new URLSearchParams({ category: cat, chapter: String(ep) });
+                    try {
+                        if (typeof roomId !== 'undefined' && roomId) params.set('roomId', roomId);
+                        if (typeof playerName !== 'undefined' && playerName) params.set('playerName', playerName);
+                        if (typeof userRole !== 'undefined' && userRole) params.set('role', userRole);
+                    } catch (e) { /* no-op */ }
+                    window.location.href = `learning-story.html?${params.toString()}`;
+                });
+
+                // Guest同期: Ownerが変更したら反映
+                (function setupGuestSync(){
+                    try {
+                        const sock = window.__learningSocket || (window.__learningSocket = io());
+                        // Guest: Ownerの変更を反映
+                        sock.on('learning_story_changed', ({ category, chapterId }) => {
+                            // Guestは本文ページへ遷移
+                            try {
+                                const params = new URLSearchParams({ category, chapter: String(chapterId || 1) });
+                                if (typeof roomId !== 'undefined' && roomId) params.set('roomId', roomId);
+                                if (typeof playerName !== 'undefined' && playerName) params.set('playerName', playerName);
+                                if (typeof userRole !== 'undefined' && userRole) params.set('role', userRole);
+                                window.location.href = `learning-story.html?${params.toString()}`;
+                                return;
+                            } catch (e) { /* フォールバック: 旧内表示 */ }
+
+                            // フォールバック（万一遷移できない場合）
+                            const subId = category;
+                            document.querySelectorAll('.wa-content-section').forEach(s=>s.classList.remove('active'));
+                            const el = document.getElementById(subId);
+                            if (el) el.classList.add('active');
+                        });
+
+                        // Guest: 参加時のスナップショットを反映
+                        sock.on('learning_story_snapshot', ({ currentCategory, selectedStory }) => {
+                            // 物語が選択済みなら本文ページへ同期遷移
+                            const chId = selectedStory?.[currentCategory];
+                            if (currentCategory && currentCategory !== 'menu' && chId) {
+                                try {
+                                    const params = new URLSearchParams({ category: currentCategory, chapter: String(chId) });
+                                    if (typeof roomId !== 'undefined' && roomId) params.set('roomId', roomId);
+                                    if (typeof playerName !== 'undefined' && playerName) params.set('playerName', playerName);
+                                    if (typeof userRole !== 'undefined' && userRole) params.set('role', userRole);
+                                    window.location.href = `learning-story.html?${params.toString()}`;
+                                    return;
+                                } catch (e) { /* no-op */ }
+                            }
+
+                            // 未選択時はカテゴリタイムラインだけ同期表示
+                            if (!currentCategory || currentCategory === 'menu') currentCategory = 'numbers';
+                            document.querySelectorAll('#story-selector .c-timeline').forEach(el=>el.classList.add('c-hidden'));
+                            const tl = document.getElementById('tl-'+currentCategory);
+                            if (tl) tl.classList.remove('c-hidden');
+                        });
+                    } catch (e) { /* 無視 */ }
+                })();
+
+                // 初期ロード
+                (async function initStorySelector(){
+                    await Promise.all([
+                        loadNumbers(),
+                        loadCategory('hardware', '/data/stories/02_hardware.json'),
+                        loadCategory('algorithms', '/data/stories/03_algorithms.json'),
+                        loadCategory('web', '/data/stories/04_web.json'),
+                        loadCategory('network', '/data/stories/05_network.json'),
+                        loadCategory('security', '/data/stories/06_security.json')
+                    ]);
+                })();
+            </script>
+        </section>
+
+        <!-- メインコンテンツ（旧・内蔵本文セクション。2ページ化に伴い無効化） -->
+        <!--
+        <section class="wa-learning-main">
 
             <!-- 各分野のストーリー表示 -->
             <div class="wa-content-section" id="numbers">
@@ -798,6 +888,7 @@
                 </div>
             </div>
         </section>
+        -->
 
         <!-- アクションボタン -->
         <div class="wa-btn-group" style="margin-top: 3rem;">
@@ -1030,7 +1121,7 @@
         
         // Socket.io 接続
         const socket = io();
-        let currentCategory = 'menu';
+        let currentCategory = 'numbers';
         
         // 初期化
         if (roomId) {
@@ -1073,27 +1164,10 @@
             if (userRole === 'guest') {
                 updateGuestSyncStatus('主催者様と接続済み', 'success');
             } else {
-                updateSyncStatus('準備完了', 'success');
             }
         });
-        
-        socket.on('learning_category_changed', (data) => {
-            if (userRole === 'guest') {
-                // Guestは自動的にOwnerの選択に従う
-                selectCategory(data.category, false); // 同期しないフラグ
-            }
-        });
-        
-        socket.on('learning_scroll_sync', (data) => {
-            if (userRole === 'guest') {
-                // スクロール位置を同期
-                const scrollElement = document.getElementById(`${data.category}StoryScroll`);
-                if (scrollElement) {
-                    scrollElement.scrollTop = data.scrollTop;
-                }
-            }
-        });
-        
+    // スクロール同期（正しい定義は後半にあります）
+
         function selectCategory(category, shouldSync = true) {
             // Ownerのみ同期イベントを送信
             if (userRole === 'owner' && shouldSync && roomId) {
@@ -1102,60 +1176,25 @@
                     category: category
                 });
             }
-            
             currentCategory = category;
-            
+
             // ナビゲーションの更新
             document.querySelectorAll('.wa-nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelector(`[data-category="${category}"]`).classList.add('active');
-            
-            // コンテンツの切り替え
-            document.querySelectorAll('.wa-content-section').forEach(section => section.classList.remove('active'));
-            document.getElementById(category).classList.add('active');
-            
-            // タイプライター効果
-            if (['numbers', 'hardware', 'binary', 'encoding', 'datasize', 'floating', 'compression'].includes(category)) {
-                const storyElement = document.getElementById(`${category}Story`);
-                if (storyElement && !storyElement.classList.contains('typed')) {
-                    typewriterEffect(storyElement);
-                }
+            const nav = document.querySelector(`[data-category="${category}"]`);
+            if (nav) nav.classList.add('active');
+
+            // タイムラインの表示切替のみを行う（本文は別ページ）
+            const tlKeys = ['numbers','hardware','algorithms','web','network','security'];
+            if (tlKeys.includes(category)) {
+                document.querySelectorAll('#story-selector .c-timeline').forEach(el=>el.classList.add('c-hidden'));
+                const tl = document.getElementById('tl-'+category);
+                if (tl) tl.classList.remove('c-hidden');
             }
         }
         
-        function typewriterEffect(element) {
-            element.classList.add('typed');
-            const text = element.innerHTML;
-            element.innerHTML = '';
-            element.style.visibility = 'visible';
-            
-            let index = 0;
-            const timer = setInterval(() => {
-                element.innerHTML = text.substring(0, index);
-                index++;
-                
-                if (index > text.length) {
-                    clearInterval(timer);
-                }
-            }, 30); // 30ms間隔で文字を表示（少し遅く）
-        }
         
-        // スクロール同期
-        function setupScrollSync() {
-            ['numbers', 'hardware', 'binary', 'encoding', 'datasize', 'floating', 'compression'].forEach(category => {
-                const scrollElement = document.getElementById(`${category}StoryScroll`);
-                if (scrollElement && userRole === 'owner') {
-                    scrollElement.addEventListener('scroll', () => {
-                        if (currentCategory === category && roomId) {
-                            socket.emit('learning_scroll_change', {
-                                roomId: roomId,
-                                category: category,
-                                scrollTop: scrollElement.scrollTop
-                            });
-                        }
-                    });
-                }
-            });
-        }
+        
+        
         
         // 同期ステータス更新
         function updateSyncStatus(status, type = 'info') {
@@ -1204,12 +1243,11 @@
         
         // Guestナビゲーションの無効化
         function disableGuestNavigation() {
+            // 参加者は全てのナビゲーション操作を無効化（Ownerのみ操作可能）
             document.querySelectorAll('.wa-nav-item').forEach(item => {
-                const category = item.dataset.category;
-                if (category !== 'menu') {
-                    item.classList.add('wa-nav-disabled');
-                    item.title = 'この操作は主催者のみが行えます';
-                }
+                item.classList.add('wa-nav-disabled');
+                item.title = 'この操作は主催者のみが行えます';
+                item.style.pointerEvents = 'none';
             });
         }
         
@@ -1262,20 +1300,12 @@
         document.querySelectorAll('.wa-nav-item').forEach(item => {
             item.addEventListener('click', (event) => {
                 const category = item.dataset.category;
-                
-                // Guestの場合は操作を無効化
+                // Guestはすべて無効化（Ownerのみ操作可能）
                 if (userRole === 'guest') {
-                    if (category === 'menu') {
-                        // メニューのみ許可
-                        selectCategory(category);
-                    } else {
-                        // その他の操作は優雅に無効化
-                        event.preventDefault();
-                        showGuestOperationNotice(category);
-                    }
+                    event.preventDefault();
+                    showGuestOperationNotice(category);
                     return;
                 }
-                
                 // Ownerの場合は正常に操作
                 selectCategory(category);
             });
@@ -1285,7 +1315,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             generateSeasonalElements('spring');
             setInterval(() => changeSeason(), 45000); // 45秒ごとに季節変更
-            setupScrollSync();
         });
         
         // 四季装飾関数（index.htmlから流用）

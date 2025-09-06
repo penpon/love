@@ -195,6 +195,27 @@
         let socket = null;
         let isConnecting = false;
         let roomConnected = false;
+        // 画面遷移の競合を避けるための共通ナビゲーション制御（優先度付き）
+        // priority: 1=モード選択(低)、2=学習/クイズ(高)
+        let navTimer = null;
+        let navPriority = 0;
+        function scheduleNavigation(url, delay = 0, priority = 1) {
+            try {
+                // 既存の高優先度がある場合は下位優先度の指示を無視
+                if (navTimer && priority < navPriority) {
+                    return;
+                }
+                // それ以外は上書き
+                if (navTimer) clearTimeout(navTimer);
+            } catch (e) {}
+            navPriority = priority;
+            navTimer = setTimeout(() => {
+                window.location.href = url;
+                // 遷移後は状態をリセット
+                navTimer = null;
+                navPriority = 0;
+            }, delay);
+        }
         
         // 初期化
         document.addEventListener('DOMContentLoaded', () => {
@@ -422,9 +443,8 @@
                     if (typeof showSakuraToast === 'function') {
                         showSakuraToast('主催者がモード選択へ進みました。自動で切り替わります。', 900, 'モード選択', '🌸');
                     }
-                    setTimeout(() => {
-                        window.location.href = `mode-select.html?role=${userRole}&roomId=${encodeURIComponent(rid)}&playerName=${encodeURIComponent(pname)}`;
-                    }, 900);
+                    // 直後にモードが選択されるケースを考慮し、低優先度(1)で予約
+                    scheduleNavigation(`mode-select.html?role=${userRole}&roomId=${encodeURIComponent(rid)}&playerName=${encodeURIComponent(pname)}`, 1200, 1);
                 }
             });
             
@@ -438,9 +458,8 @@
                     if (typeof showSakuraToast === 'function') {
                         showSakuraToast('学習モードを開始します。遷移しています…', 1200, '学習開始', '📚');
                     }
-                    setTimeout(() => {
-                        window.location.href = `learning.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
-                    }, 1200);
+                    // 本命: 高優先度(2)で上書き
+                    scheduleNavigation(`learning.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`, 900, 2);
                 }
             });
             
@@ -454,9 +473,8 @@
                     if (typeof showSakuraToast === 'function') {
                         showSakuraToast('クイズモードを開始します。遷移しています…', 1200, 'クイズ開始', '⚔️');
                     }
-                    setTimeout(() => {
-                        window.location.href = `matching.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
-                    }, 1200);
+                    // 本命: 高優先度(2)で上書き
+                    scheduleNavigation(`matching.html?role=${userRole}&roomId=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`, 900, 2);
                 }
             });
             

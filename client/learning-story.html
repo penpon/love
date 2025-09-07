@@ -141,6 +141,24 @@
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
+    // セリフ行（紬/凪で始まる）の強調用ラッパー
+    function renderStoryLines(lines) {
+      const isDialogue = (t) => /^(紬|凪)「/.test(t);
+      const speakerClass = (t) => {
+        if (/^紬「/.test(t)) return 'wa-dialogue wa-tsumugi';
+        if (/^凪「/.test(t)) return 'wa-dialogue wa-nagi';
+        return 'wa-dialogue';
+      };
+      return (lines || []).map((p) => {
+        if (!p) return '<br>';
+        const escaped = escapeHTML(p);
+        if (isDialogue(p)) {
+          return `<span class="${speakerClass(p)}">${escaped}</span><br>`;
+        }
+        return escaped + '<br>';
+      }).join('');
+    }
+
     let CURRENT_JSON = null;       // manifest または 旧JSON全体
     let CURRENT_CHAPTERS = [];     // 章（=話）メタ配列
     let CURRENT_INDEX = -1;        // 現在インデックス
@@ -275,9 +293,7 @@
           // 表示
           document.getElementById('storySubtitle').textContent = `第${chData.id ?? chMeta.id}話：${chData.title ?? chMeta.title}`;
           const storyEl = document.getElementById('storyBody');
-          const lines = chData.story || [];
-          const html = lines.map(p => p ? escapeHTML(p) : '<br>').map(l => /<br>/.test(l) ? l : l + '<br>').join('');
-          storyEl.innerHTML = html;
+          storyEl.innerHTML = renderStoryLines(chData.story);
           storyEl.parentElement?.parentElement?.scrollTo?.(0, 0);
           const kc = document.querySelector('.wa-key-concepts');
           if (kc) kc.classList.remove('visible');
@@ -331,9 +347,7 @@
 
         document.getElementById('storySubtitle').textContent = `第${ch.id}話：${ch.title}`;
         const storyEl = document.getElementById('storyBody');
-        const lines = ch.story || [];
-        const html = lines.map(p => p ? escapeHTML(p) : '<br>').map(l => /<br>/.test(l) ? l : l + '<br>').join('');
-        storyEl.innerHTML = html;
+        storyEl.innerHTML = renderStoryLines(ch.story);
         storyEl.parentElement?.parentElement?.scrollTo?.(0, 0);
         const kc = document.querySelector('.wa-key-concepts');
         if (kc) kc.classList.remove('visible');
